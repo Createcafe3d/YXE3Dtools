@@ -4,6 +4,56 @@ logger = logging.getLogger('peachy')
 from peachyprinter.domain.transformer import Transformer
 import threading
 
+class LinerAlgebraTransformer(Transformer):
+    def __init__(self, scale, upper_height, lower_points, upper_points):
+        '''Given upper and lower points as a zippered array of (deflection,distance)
+            where each distance|deflection is (x,y)
+            
+            This transform works by creating a linear transform matrix '''
+
+        self._scale = scale
+        self._upper_height = upper_height
+        self._lower_points = lower_points
+        self._upper_points = upper_points
+
+        self._transform = self._create_transform(lower_points,upper_points,upper_height)
+        self._cache = {}
+
+    def set_scale(self, new_scale):
+        self._scale = new_scale
+        self._get_transforms()
+
+    def _create_transform(self,lower_points,upper_points,upper_height):
+
+        upper_distances = [distance for (deflection, distance) in upper_points.items()]
+        upper_deflection = [deflection for (deflection, distance) in upper_points.items()]
+        lower_distances = [distance for (deflection, distance) in lower_points.items()]
+        lower_deflection = [deflection for (deflection, distance) in lower_points.items()]
+
+        lower_3d_distances = np.concatenate(lower_distances,[0]*4,axis=1)
+        upper_3d_distances = np.concatenate(upper_distances,[upper_height]*4,axis=1)
+        3d_distances = np.array(lower_3d_distances + upper_3d_distances)
+        3d_distances_inv = self._left_inverse(3d_distances)
+        #3d_distances_inv = np.linalg.pinv(3d_distances)
+
+        deflections = np.array(lower_deflections + upper_deflections)
+        transform = np.dot(3d_distances_inv, deflections)
+        return transform
+
+    def _left_inverse(self,matrix):
+        ''' leftInverse(A) = inverse(A_t*A)*A_t'''
+
+        transposed_matrix = np.transpose(matrix)
+        sq_helper = np.dot(transposed_matrix,matrix)
+        inverse_helper = np.linalg.inv(sq_helper)
+        left_inverse = np.dot(inverse_helper,transposed_matrix)
+        return left_inverse
+
+    def transform(self,xyz_point):
+
+        deflections = np.dot(xyz_point,self._transform)
+        return deflections
+
 
 class OneToOneTransformer(Transformer):
     def transform(self, xyz):
@@ -129,15 +179,21 @@ class HomogenousTransformer(Transformer):
         elif height in self._cache.keys():
             return self._cache[height]
         else:
-            current = self._positional_transform(height)
+            current = self._scale_transform(height)
             self._cache = {height: current}
             return current
 
-    def _positional_transform(self, height):
+    def _scale_transform(self, height):
         adjusted_height = height / self._upper_height
         return (adjusted_height * (self._upper_transform - self._lower_transform)) + self._lower_transform
 
     def transform(self, (x, y, z)):
+        '''transforms cartesian x,y,z into "coneular" dimensions,
+            and outputs x_power, y_power as a number between 1.0 and 0.0.
+            
+            This accounts for both "off center-ness" and the "cosine-ness"
+            of the power curve.'''
+
         self._lock.acquire()
         try:
             realworld = np.array([[x], [y], [1]])
