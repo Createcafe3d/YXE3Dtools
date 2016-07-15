@@ -14,30 +14,36 @@ class LinerAlgebraTransformer(Transformer):
         self._scale = scale
         self._upper_height = upper_height
         self._lower_points = lower_points
-        self._upper_points = upper_points
-
         self._transform = self._create_transform(lower_points,upper_points,upper_height)
         self._cache = {}
 
     def set_scale(self, new_scale):
-        self._scale = new_scale
-        self._get_transforms()
+        pass
 
     def _create_transform(self,lower_points,upper_points,upper_height):
+        '''Creates self._transform, you feed it xyz and defliections - this creates the linear transform matrix for use in self.transform()'''
 
         upper_distances = [distance for (deflection, distance) in upper_points.items()]
-        upper_deflection = [deflection for (deflection, distance) in upper_points.items()]
+        upper_deflections = [deflection for (deflection, distance) in upper_points.items()]
         lower_distances = [distance for (deflection, distance) in lower_points.items()]
-        lower_deflection = [deflection for (deflection, distance) in lower_points.items()]
+        lower_deflections = [deflection for (deflection, distance) in lower_points.items()]
 
-        lower_3d_distances = np.concatenate(lower_distances,[0]*4,axis=1)
-        upper_3d_distances = np.concatenate(upper_distances,[upper_height]*4,axis=1)
-        3d_distances = np.array(lower_3d_distances + upper_3d_distances)
-        3d_distances_inv = self._left_inverse(3d_distances)
-        #3d_distances_inv = np.linalg.pinv(3d_distances)
+        #List of Tupples, Tupples contain each row, [colum_index][row_index]
+        #[(0,)]*4 means 4 rows of 1 index each 4X1 matrix
+        #[(1,1),(2,2)] is an array 2X2 with 1's on top and 2's on the bottom 
+        #np.concatenate axis=1 is colum concatenate, axis=0 is concatenating a new row
+        lower_3d_distances = np.concatenate((lower_distances, [(0,)]*4), axis=1)
+        upper_3d_distances = np.concatenate((upper_distances, [(upper_height,)]*4), axis=1)
 
-        deflections = np.array(lower_deflections + upper_deflections)
-        transform = np.dot(3d_distances_inv, deflections)
+
+        distances_3d = np.concatenate((lower_3d_distances, upper_3d_distances), axis=0)
+        distances_3d_inv = self._left_inverse(distances_3d)
+
+        #linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
+        #other_distances_3d_inv = np.linalg.pinv(distances_3d)
+
+        deflections = np.concatenate((lower_deflections,upper_deflections), axis=0)
+        transform = np.dot(distances_3d_inv, deflections)
         return transform
 
     def _left_inverse(self,matrix):
@@ -213,3 +219,32 @@ class HomogenousTransformer(Transformer):
     def set_scale(self, new_scale):
         self._scale = new_scale
         self._get_transforms()
+
+if __name__ == "__main__":
+    #adhock debug:
+    height = 1.0 
+
+    #(deflection,distance)
+    lower_points = { 
+            (1.0, 1.0): (1.0, 1.0),
+            (0.0, 1.0): (-1.0, 1.0),
+            (1.0, 0.0): (1.0, -1.0),
+            (0.0, 0.0): (-1.0, -1.0)
+            }
+    upper_points = { 
+            (1.0, 1.0): (1.0, 1.0),
+            (0.0, 1.0): (-1.0, 1.0),
+            (1.0, 0.0): (1.0, -1.0),
+            (0.0, 0.0): (-1.0, -1.0)
+            }
+    scale = 1.0 
+
+    
+    example_xyz = (0.2,0.4,0.6)
+
+    print "LinTransformerMade"
+    LinTransformer=LinerAlgebraTransformer(scale ,height ,lower_points ,upper_points)
+    deflections = LinTransformer.transform(example_xyz)
+    print deflections
+
+    

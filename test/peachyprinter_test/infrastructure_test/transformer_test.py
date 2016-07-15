@@ -7,7 +7,7 @@ import math
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.transformer import OneToOneTransformer, TuningTransformer, HomogenousTransformer
+from peachyprinter.infrastructure.transformer import OneToOneTransformer, TuningTransformer, HomogenousTransformer, LinearAlgebraTransformer
 
 
 class OneToOneTransformerTests(unittest.TestCase):
@@ -57,6 +57,40 @@ class TuningTransformerTests(unittest.TestCase):
         self.assertEquals([0.5, 0.5], tuning_transformer.transform([0.5, 0.5, 1.0]))
         self.assertEquals([0.25, 0.25], tuning_transformer.transform([0.0, 0.0, 1.0]))
 
+class LinerAlgebraTransformerTests(unittest.TestCase):
+    def test_given_a_basic_mapping_yields_expected_results(self):
+        height = 1.0
+        lower_points = {
+                (1.0, 1.0): (1.0, 1.0),
+                (0.0, 1.0): (-1.0, 1.0),
+                (1.0, 0.0): (1.0, -1.0),
+                (0.0, 0.0): (-1.0, -1.0)
+                }
+        upper_points = {
+                (1.0, 1.0): (1.0, 1.0),
+                (0.0, 1.0): (-1.0, 1.0),
+                (1.0, 0.0): (1.0, -1.0),
+                (0.0, 0.0): (-1.0, -1.0)
+                }
+        scale = 1.0
+        transformer = LinearAlgebraTransformer(scale, height, lower_points, upper_points)
+
+        test_points = [
+            [1.0, 1.0, 0.0], [-1.0, -1.0, 0.0], [0.0, 0.0, 0.0], [0.5, 0.5, 0.0],
+            [1.0, 1.0, 2.5], [-1.0, -1.0, 2.5], [0.0, 0.0, 2.5], [0.5, 0.5, 2.5],
+            [1.0, 1.0, 5.0], [-1.0, -1.0, 5.0], [0.0, 0.0, 5.0], [0.5, 0.5, 5.0]]
+
+        expected_points = [((x + 1.0) / 2.0, (y + 1.0) / 2.0) for (x, y, z) in test_points]
+        actual_points = [transformer.transform(point) for point in test_points]
+
+        print "----------------------------"
+        print "Expected then Actual points:"
+        print "----------------------------"
+
+        print expected_points
+        print actual_points
+
+        self.assertEquals(expected_points, actual_points)
 
 class HomogenousTransformerTests(unittest.TestCase):
     def test_points_outside_range_clip(self):
@@ -108,37 +142,6 @@ class HomogenousTransformerTests(unittest.TestCase):
         actual_points = [transformer.transform(point) for point in test_points]
 
         self.assertEquals(expected_points, actual_points)
-
-    # def test_zero_should_not_change_regardless_of_height(self):
-    #     height = 1.0
-    #     lower_points = {
-    #             (1.0, 1.0): (36.0, 27.0),
-    #             (0.0, 1.0): (-38.0, 30.0),
-    #             (1.0, 0.0): (35.0, -33.0),
-    #             (0.0, 0.0): (-38.0, -29.0)
-    #             }
-    #     upper_points = {
-    #             (1.0, 1.0): (30.0, 23.0),
-    #             (0.0, 1.0): (-31.0, 26.0),
-    #             (1.0, 0.0): (30.0, -27.0),
-    #             (0.0, 0.0): (-32.0, -25.0)
-    #             }
-    #     scale = 1.0
-    #     transformer = HomogenousTransformer(scale, height, lower_points, upper_points)
-    #     test_points = [[0.0, 0.0, 0.1], [0.0, 0.0, 1.0]]
-
-    #     actual_points = [transformer.transform(point) for point in test_points]
-    #     self.assertAlmostEquals(actual_points[0][0], actual_points[1][0])
-    #     self.assertAlmostEquals(actual_points[0][1], actual_points[1][1])
-
-    #     #sanity
-    #     bottom = transformer.transform([18.0, 13.5, 0.0])
-    #     self.assertAlmostEquals(0.76, bottom[0], places=2)
-    #     self.assertAlmostEquals(0.76, bottom[1], places=2)
-
-    #     top = transformer.transform([18.0, 13.5, 1.0])
-    #     self.assertAlmostEquals(0.82, top[0], places=2)
-    #     self.assertAlmostEquals(0.80, top[1], places=2)
 
     def test_given_a_basic_mapping_yields_expected_results_with_scale(self):
         height = 1.0
