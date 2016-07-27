@@ -10,8 +10,8 @@ rm -rf *.dmg
 rm -f src/VERSION.py
 rm -f version.properties
 rm -rf src/dist
-rm -rf PeachPrinterToolsAPI.egg-info
-rm -rf PeachyPrinterToolsAPI*.tar.gz
+rm -rf YXE3DToolsAPI.egg-info
+rm -rf YXE3DtoolsAPI*.tar.gz
 rm -rf venv
 
 echo "------------------------------------"
@@ -51,7 +51,7 @@ echo "# THIS IS A GENERATED FILE " > version.properties
 echo "version='$VERSION'" >> version.properties
 echo "revision='$GIT_REV'" >> version.properties
 echo "Git Revision Number is $GIT_REV_COUNT"
-cp version.properties src/peachyprinter/VERSION.py
+cp version.properties src/YXE3D/VERSION.py
 cp version.properties src/VERSION.py
 
 
@@ -66,7 +66,7 @@ if [ $? != 0 ]; then
     exit 56
 fi
 
-python -m pip install dist/PeachyPrinterToolsAPI-$VERSION.tar.gz
+python -m pip install dist/YXE3DtoolsAPI-$VERSION.tar.gz
 if [ $? != 0 ]; then
     echo "PACKAGE INSTALL FAILED ABORTING"
     exit 56
@@ -94,7 +94,7 @@ fi
 echo "TESTS COMPLETE SUCCESS"
 
 
-mv src/dist/PeachyPrinterToolsAPI*.tar.gz .
+mv src/dist/YXE3DtoolsAPI*.tar.gz .
 
 if [ $? != 0 ]; then
     echo "FAILED MOVE PACKAGE ABORTING"

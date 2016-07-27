@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# Script to demonstrate the use of the peachyprintertools API to
+# Script to demonstrate the use of the YXE3Dtools API to
 # display a test pattern on the Peachy Printer
 
-import peachyprinter
+import YXE3D
 import logging
 import time
 
@@ -25,7 +25,7 @@ logger = setup_logging()
 
 logger.info("Starting up test pattern")
 
-api = peachyprinter.PrinterAPI()
+api = YXE3D.PrinterAPI()
 api.load_printer()
 
 print "Loaded %s " % (api.current_printer(),)

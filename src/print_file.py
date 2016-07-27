@@ -6,13 +6,13 @@ import sys
 import time
 import argparse
 
-from peachyprinter import PrinterAPI
+from YXE3D import PrinterAPI
 
 running = False
 
 def setup_logging(args):
     peachy_logger = logging.getLogger('peachy')
-    logfile = os.path.join(args.log_path, 'peachyprinter.log')
+    logfile = os.path.join(args.log_path, 'YXE3D.log')
     print ("Using logfile: {}".format(logfile))
     try:
         if os.path.isfile(logfile):
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     setup_env(path)
 
     if not args.log_path:
-        args.log_path = os.path.join(os.path.expanduser('~'), '.peachyprintertools',)
+        args.log_path = os.path.join(os.path.expanduser('~'), '.YXE3Dtools',)
     if not os.path.exists(args.log_path):
         os.makedirs(args.log_path)
     setup_logging(args)

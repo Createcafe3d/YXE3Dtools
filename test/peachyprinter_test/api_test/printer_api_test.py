@@ -10,9 +10,9 @@ import logging
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.api.print_api import PrintAPI, PrintQueueAPI
-from peachyprinter.infrastructure.machine import *
-from peachyprinter.infrastructure.messages import PrinterStatusMessage
+from YXE3D.api.print_api import PrintAPI, PrintQueueAPI
+from YXE3D.infrastructure.machine import *
+from YXE3D.infrastructure.messages import PrinterStatusMessage
 
 import test_helpers
 
@@ -42,7 +42,7 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
         folder = os.path.join('', 'SomthingMadeUp')
         mock_isdir.return_value = True
         mock_listdir.return_value = []
-        with patch('peachyprinter.api.print_api.listdir', return_value=[]):
+        with patch('YXE3D.api.print_api.listdir', return_value=[]):
             with self.assertRaises(Exception):
                 api = PrintQueueAPI(self.default_config)
                 api.print_folder(folder)
@@ -51,7 +51,7 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
     def test_print_folder_should_raise_exception_when_no_gcode_files(self,  mock_isdir):
         folder = os.path.join('', 'SomthingMadeUp')
         mock_isdir.return_value = True
-        with patch('peachyprinter.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa']):
+        with patch('YXE3D.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa']):
             with self.assertRaises(Exception):
                 api = PrintQueueAPI(self.default_config)
                 api.print_folder(folder)
@@ -63,13 +63,13 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
         expected_file = 'thingy.gcode'
         expected_path = os.path.join(folder, expected_file)
         mock_isdir.return_value = True
-        with patch('peachyprinter.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file]):
+        with patch('YXE3D.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file]):
             api = PrintQueueAPI(self.default_config)
             api.print_folder(folder)
         mock_print_gcode.assert_called_with(expected_path)
 
     @patch.object(os.path, 'isdir')
-    @patch('peachyprinter.api.print_api.PrintAPI')
+    @patch('YXE3D.api.print_api.PrintAPI')
     def test_print_folder_should_call_print_api_for_each_gcode_files_after_layer_complete(self, mock_PrintAPI, mock_isdir):
         folder = os.path.join('', 'SomthingMadeUp')
         expected_file1 = 'thingy1.gcode'
@@ -78,7 +78,7 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
         expected_path2 = os.path.join(folder, expected_file2)
         mock_isdir.return_value = True
         mock_print_api = mock_PrintAPI.return_value
-        with patch('peachyprinter.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1, expected_file2]):
+        with patch('YXE3D.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1, expected_file2]):
             api = PrintQueueAPI(self.default_config)
             api.print_folder(folder)
             mock_print_api.print_gcode.assert_called_with(expected_path1)
@@ -88,14 +88,14 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
             mock_print_api.print_gcode.assert_called_with(expected_path2)
 
     @patch.object(os.path, 'isdir')
-    @patch('peachyprinter.api.print_api.PrintAPI')
+    @patch('YXE3D.api.print_api.PrintAPI')
     def test_print_folder_should_close_api_before_opening_new_one(self, mock_PrintAPI, mock_isdir):
         folder = os.path.join('', 'SomthingMadeUp')
         expected_file1 = 'thingy1.gcode'
         expected_file2 = 'thingy2.gcode'
         mock_isdir.return_value = True
         mock_print_api = mock_PrintAPI.return_value
-        with patch('peachyprinter.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1, expected_file2]):
+        with patch('YXE3D.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1, expected_file2]):
             api = PrintQueueAPI(self.default_config)
             api.print_folder(folder)
             call_back = mock_PrintAPI.call_args[0][1]
@@ -104,14 +104,14 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
             mock_print_api.close.assert_called_with()
 
     @patch.object(os.path, 'isdir')
-    @patch('peachyprinter.api.print_api.PrintAPI')
+    @patch('YXE3D.api.print_api.PrintAPI')
     def test_print_folder_should_be_interuptable(self, mock_PrintAPI, mock_isdir):
         folder = os.path.join('', 'SomthingMadeUp')
         expected_file1 = 'thingy1.gcode'
         expected_file2 = 'thingy2.gcode'
         mock_isdir.return_value = True
         mock_print_api = mock_PrintAPI.return_value
-        with patch('peachyprinter.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1, expected_file2]):
+        with patch('YXE3D.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1, expected_file2]):
             api = PrintQueueAPI(self.default_config)
             api.print_folder(folder)
             api.close()
@@ -119,12 +119,12 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
             self.assertEquals(1, mock_PrintAPI.call_count)
 
     @patch.object(os.path, 'isdir')
-    @patch('peachyprinter.api.print_api.PrintAPI')
+    @patch('YXE3D.api.print_api.PrintAPI')
     def test_print_folder_ends_smoothly(self, mock_PrintAPI, mock_isdir):
         folder = os.path.join('', 'SomthingMadeUp')
         expected_file1 = 'thingy1.gcode'
         mock_isdir.return_value = True
-        with patch('peachyprinter.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1]):
+        with patch('YXE3D.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1]):
             api = PrintQueueAPI(self.default_config)
             api.print_folder(folder)
             call_back = mock_PrintAPI.call_args[0][1]
@@ -132,7 +132,7 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
             call_back(mock_status)
 
     @patch.object(os.path, 'isdir')
-    @patch('peachyprinter.api.print_api.PrintAPI')
+    @patch('YXE3D.api.print_api.PrintAPI')
     def test_print_folder_should_delay_between_prints(self, mock_PrintAPI, mock_isdir):
         folder = os.path.join('', 'SomthingMadeUp')
         expected_file1 = 'thingy1.gcode'
@@ -141,7 +141,7 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
         mock_isdir.return_value = True
         config = self.default_config
         config.options.print_queue_delay = expected_delay
-        with patch('peachyprinter.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1, expected_file2]):
+        with patch('YXE3D.api.print_api.listdir', return_value=['ASDFAS.txt', 'bor.fa', expected_file1, expected_file2]):
             api = PrintQueueAPI(config)
             api.print_folder(folder)
             self.assertEquals(1, mock_PrintAPI.call_count)
@@ -153,28 +153,28 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
             end = time.time()
             self.assertTrue(expected_delay <= end-start + 0.01, "%s was not <= %s" % (expected_delay, (end - start + 0.01)))
 
-@patch('peachyprinter.api.print_api.SerialDripZAxis')
-@patch('peachyprinter.api.print_api.MicroDisseminator')
-@patch('peachyprinter.api.print_api.UsbPacketCommunicator')
-@patch('peachyprinter.api.print_api.LaserControl')
-@patch('peachyprinter.api.print_api.FileWriter')
-@patch('peachyprinter.api.print_api.EmailNotificationService')
-@patch('peachyprinter.api.print_api.EmailGateway')
-@patch('peachyprinter.api.print_api.PhotoZAxis')
-@patch('peachyprinter.api.print_api.TimedDripZAxis')
-@patch('peachyprinter.api.print_api.SerialCommander')
-@patch('peachyprinter.api.print_api.OverLapGenerator')
-@patch('peachyprinter.api.print_api.MachineState')
-@patch('peachyprinter.api.print_api.MachineStatus')
-@patch('peachyprinter.api.print_api.Controller')
-@patch('peachyprinter.api.print_api.PathToPoints')
-@patch('peachyprinter.api.print_api.HomogenousTransformer')
-@patch('peachyprinter.api.print_api.GCodeReader')
-@patch('peachyprinter.api.print_api.SubLayerGenerator')
-@patch('peachyprinter.api.print_api.NullCommander')
-@patch('peachyprinter.api.print_api.ShuffleGenerator')
-@patch('peachyprinter.api.print_api.LayerWriter')
-@patch('peachyprinter.api.print_api.LayerProcessing')
+@patch('YXE3D.api.print_api.SerialDripZAxis')
+@patch('YXE3D.api.print_api.MicroDisseminator')
+@patch('YXE3D.api.print_api.UsbPacketCommunicator')
+@patch('YXE3D.api.print_api.LaserControl')
+@patch('YXE3D.api.print_api.FileWriter')
+@patch('YXE3D.api.print_api.EmailNotificationService')
+@patch('YXE3D.api.print_api.EmailGateway')
+@patch('YXE3D.api.print_api.PhotoZAxis')
+@patch('YXE3D.api.print_api.TimedDripZAxis')
+@patch('YXE3D.api.print_api.SerialCommander')
+@patch('YXE3D.api.print_api.OverLapGenerator')
+@patch('YXE3D.api.print_api.MachineState')
+@patch('YXE3D.api.print_api.MachineStatus')
+@patch('YXE3D.api.print_api.Controller')
+@patch('YXE3D.api.print_api.PathToPoints')
+@patch('YXE3D.api.print_api.HomogenousTransformer')
+@patch('YXE3D.api.print_api.GCodeReader')
+@patch('YXE3D.api.print_api.SubLayerGenerator')
+@patch('YXE3D.api.print_api.NullCommander')
+@patch('YXE3D.api.print_api.ShuffleGenerator')
+@patch('YXE3D.api.print_api.LayerWriter')
+@patch('YXE3D.api.print_api.LayerProcessing')
 class PrintAPITests(unittest.TestCase, test_helpers.TestHelpers):
 
     def setup_mocks(self, args):

@@ -7,7 +7,7 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.commander import NullCommander, SerialCommander
+from YXE3D.infrastructure.commander import NullCommander, SerialCommander
 
 class NullCommanderTests(unittest.TestCase):
     def test_sending_command_does_nothing(self):

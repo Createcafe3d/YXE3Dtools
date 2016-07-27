@@ -7,9 +7,9 @@ from mock import patch
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-import peachyprinter.infrastructure
-from peachyprinter.infrastructure.machine import *
-from peachyprinter.domain.commands import *
+import YXE3D.infrastructure
+from YXE3D.infrastructure.machine import *
+from YXE3D.domain.commands import *
 
 
 class MachineStatusTests(unittest.TestCase):

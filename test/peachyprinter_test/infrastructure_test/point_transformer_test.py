@@ -9,11 +9,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import test_helpers
-from peachyprinter.infrastructure.point_transformer import *
-from peachyprinter.infrastructure.simulator import PeachyPrinterFactory
+from YXE3D.infrastructure.point_transformer import *
+from YXE3D.infrastructure.simulator import YXE3DFactory
 
 class PointTransformerTest(unittest.TestCase):
-    factory = PeachyPrinterFactory()
+    factory = YXE3DFactory()
 
     def get_test_points(self,size,z):
         for y in range(0,size):

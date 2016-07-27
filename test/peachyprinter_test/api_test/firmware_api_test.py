@@ -8,22 +8,22 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-import peachyprinter.api.firmware_api as firmware_api
-from peachyprinter.api.firmware_api import FirmwareAPI, FirmwareUpdate
-from peachyprinter.infrastructure.messages import EnterBootloaderMessage
+import YXE3D.api.firmware_api as firmware_api
+from YXE3D.api.firmware_api import FirmwareAPI, FirmwareUpdate
+from YXE3D.infrastructure.messages import EnterBootloaderMessage
 
 
-@patch('peachyprinter.api.firmware_api.FirmwareUpdate')
-@patch('peachyprinter.api.firmware_api.firmware_manager_factory')
-@patch('peachyprinter.api.firmware_api.glob')
-@patch('peachyprinter.api.firmware_api.sys')
+@patch('YXE3D.api.firmware_api.FirmwareUpdate')
+@patch('YXE3D.api.firmware_api.firmware_manager_factory')
+@patch('YXE3D.api.firmware_api.glob')
+@patch('YXE3D.api.firmware_api.sys')
 class FirmwareAPITests(unittest.TestCase):
 
     def _setup_mock(self, mock_sys, mock_firmware_manager_factory, mock_glob, firmware_version='1.0.0'):
         self.mock_firmware_updater = MagicMock()
         mock_sys.frozen = False
         mock_sys.platform = 'darwin'
-        self.expected_firmware_file = 'peachyprinter-firmware-{}.bin'.format(firmware_version)
+        self.expected_firmware_file = 'YXE3D-firmware-{}.bin'.format(firmware_version)
         mock_firmware_manager_factory.get_firmware_updater.return_value = self.mock_firmware_updater
         self.mock_firmware_updater.check_ready.return_value = True
         mock_glob.return_value = [self.expected_firmware_file]
@@ -40,7 +40,7 @@ class FirmwareAPITests(unittest.TestCase):
 
     def test_is_firmware_valid_raises_exception_if_multipule_firmware_files_present(self, mock_sys, mock_glob, mock_firmware_manager_factory, mock_FirmwareUpdate):
         self._setup_mock(mock_sys, mock_firmware_manager_factory, mock_glob)
-        mock_glob.return_value = ['peachyprinter-firmware-1.0.0.bin', 'peachyprinter-firmware-1.0.1.bin']
+        mock_glob.return_value = ['YXE3D-firmware-1.0.0.bin', 'YXE3D-firmware-1.0.1.bin']
         with self.assertRaises(Exception) as context:
             fwapi = FirmwareAPI()
             fwapi.is_firmware_valid('1.0.0')
@@ -49,25 +49,25 @@ class FirmwareAPITests(unittest.TestCase):
 
     def test_is_firmware_valid_returns_true_if_file_matches_version(self, mock_sys, mock_glob, mock_firmware_manager_factory, mock_FirmwareUpdate):
         self._setup_mock(mock_sys, mock_firmware_manager_factory, mock_glob)
-        mock_glob.return_value = ['peachyprinter-firmware-1.0.0.bin']
-        expected_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src', 'peachyprinter', 'dependancies', 'firmware'))
+        mock_glob.return_value = ['YXE3D-firmware-1.0.0.bin']
+        expected_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src', 'YXE3D', 'dependancies', 'firmware'))
         fwapi = FirmwareAPI()
 
         result = fwapi.is_firmware_valid('1.0.0')
 
-        mock_glob.assert_called_with(os.path.join(expected_path, "peachyprinter-firmware-*.bin"))
+        mock_glob.assert_called_with(os.path.join(expected_path, "YXE3D-firmware-*.bin"))
         self.assertTrue(result)
 
     def test_is_firmware_valid_returns_true_if_file_matches_version_windows(self, mock_sys, mock_glob, mock_firmware_manager_factory, mock_FirmwareUpdate):
         self._setup_mock(mock_sys, mock_firmware_manager_factory, mock_glob)
         mock_sys.platform = 'win32'
-        mock_glob.return_value = ['peachyprinter-firmware-1.0.0.dfu']
-        expected_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src', 'peachyprinter', 'dependancies', 'firmware'))
+        mock_glob.return_value = ['YXE3D-firmware-1.0.0.dfu']
+        expected_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src', 'YXE3D', 'dependancies', 'firmware'))
         fwapi = FirmwareAPI()
 
         result = fwapi.is_firmware_valid('1.0.0')
 
-        mock_glob.assert_called_with(os.path.join(expected_path, "peachyprinter-firmware-*.dfu"))
+        mock_glob.assert_called_with(os.path.join(expected_path, "YXE3D-firmware-*.dfu"))
         self.assertTrue(result)
 
     def test_is_ready_returns_false_when_firmware_api_returns_true(self, mock_sys, mock_glob, mock_firmware_manager_factory, mock_FirmwareUpdate):
@@ -155,7 +155,7 @@ class FirmwareUpdateTests(unittest.TestCase):
         mock_updater.update.assert_called_with(expected_file)
         call_back.assert_called_with(False)
 
-    @patch('peachyprinter.api.firmware_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.firmware_api.UsbPacketCommunicator')
     def test_prepare_creates_a_usb_communicator_and_sends_enter_bootloader(self, mock_UsbPacketCommunicator):
         mock_updater = MagicMock()
         mock_usb_packet_communicator = mock_UsbPacketCommunicator.return_value

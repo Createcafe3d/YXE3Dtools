@@ -10,7 +10,7 @@ from mock import patch, MagicMock, mock_open
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.configuration import *
+from YXE3D.infrastructure.configuration import *
 
 import test_helpers
 

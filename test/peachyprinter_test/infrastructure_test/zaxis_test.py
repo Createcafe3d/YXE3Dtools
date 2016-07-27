@@ -8,8 +8,8 @@ from mock import MagicMock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.zaxis import SerialDripZAxis
-from peachyprinter.infrastructure.messages import DripRecordedMessage, SetDripCountMessage, MoveToDripCountMessage
+from YXE3D.infrastructure.zaxis import SerialDripZAxis
+from YXE3D.infrastructure.messages import DripRecordedMessage, SetDripCountMessage, MoveToDripCountMessage
 
 
 class SerialDripZAxisTests(unittest.TestCase):

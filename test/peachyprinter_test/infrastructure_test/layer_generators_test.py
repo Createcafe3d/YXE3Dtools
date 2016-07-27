@@ -6,8 +6,8 @@ import logging
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.layer_generators import *
-from peachyprinter.domain.commands import *
+from YXE3D.infrastructure.layer_generators import *
+from YXE3D.domain.commands import *
 import test_helpers
 
 #----------------- Calibration Generators -----------------------------

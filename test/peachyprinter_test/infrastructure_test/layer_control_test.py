@@ -8,14 +8,14 @@ from mock import patch, call, Mock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.layer_control import *
-from peachyprinter.domain.commands import *
-from peachyprinter.infrastructure.machine import *
+from YXE3D.infrastructure.layer_control import *
+from YXE3D.domain.commands import *
+from YXE3D.infrastructure.machine import *
 
 
-@patch('peachyprinter.domain.laser_control.LaserControl')
-@patch('peachyprinter.infrastructure.path_to_points.PathToPoints')
-@patch('peachyprinter.infrastructure.micro_disseminator.MicroDisseminator')
+@patch('YXE3D.domain.laser_control.LaserControl')
+@patch('YXE3D.infrastructure.path_to_points.PathToPoints')
+@patch('YXE3D.infrastructure.micro_disseminator.MicroDisseminator')
 class LayerWriterTests(unittest.TestCase):
 
     def test_process_layer_should_turn_off_laser_for_draw_commands_when_forced_off(self, mock_MicroDisseminator, mock_PathToPoints, mock_LaserControl):
@@ -352,8 +352,8 @@ class LayerWriterTests(unittest.TestCase):
         self.assertEqual(expected, result)
 
 
-@patch('peachyprinter.infrastructure.layer_control.LayerWriter')
-@patch('peachyprinter.domain.zaxis.ZAxis')
+@patch('YXE3D.infrastructure.layer_control.LayerWriter')
+@patch('YXE3D.domain.zaxis.ZAxis')
 class LayerProcessingTest(unittest.TestCase):
 
     def test_process_should_skip_layers_if_higher_then_max_lead_distance(self, mock_ZAxis, mock_Writer):
@@ -426,7 +426,7 @@ class LayerProcessingTest(unittest.TestCase):
         self.assertEqual(1, mock_writer.process_layer.call_count)
         self.assertEqual(2, mock_writer.wait_till_time.call_count)
 
-    @patch('peachyprinter.infrastructure.machine.MachineStatus')
+    @patch('YXE3D.infrastructure.machine.MachineStatus')
     def test_process_should_set_waiting_while_wating_for_z(self, mock_MachineStatus, mock_ZAxis, mock_Writer):
         mock_writer = mock_Writer.return_value
         mock_zaxis = mock_ZAxis.return_value
@@ -455,7 +455,7 @@ class LayerProcessingTest(unittest.TestCase):
         print commander.send_command.call_args_list
         self.assertEqual('o', commander.send_command.call_args_list[1][0][0])
 
-    @patch('peachyprinter.infrastructure.commander.Commander')
+    @patch('YXE3D.infrastructure.commander.Commander')
     def test_process_should_write_layer_start_and_end_commands(self, mock_Commander, mock_ZAxis, mock_Writer):
         mock_commander = mock_Commander.return_value
         mock_zaxis = mock_ZAxis.return_value
@@ -473,7 +473,7 @@ class LayerProcessingTest(unittest.TestCase):
         self.assertEquals(
             [call('s'), call('f'), call('a'), call('b')], mock_commander.send_command.call_args_list)
 
-    @patch('peachyprinter.infrastructure.commander.Commander')
+    @patch('YXE3D.infrastructure.commander.Commander')
     def test_abort_current_command_should(self, mock_Commander, mock_ZAxis, mock_Writer):
         max_lead_distance = 1.0
         mock_commander = mock_Commander.return_value
@@ -488,7 +488,7 @@ class LayerProcessingTest(unittest.TestCase):
         mock_writer.abort_current_command.assert_called_with()
 
 
-    @patch('peachyprinter.infrastructure.commander.Commander')
+    @patch('YXE3D.infrastructure.commander.Commander')
     def test_termiate_should_write_print_end_command_when_terminated(self, mock_Commander, mock_ZAxis, mock_Writer):
         max_lead_distance = 1.0
         mock_commander = mock_Commander.return_value
@@ -519,7 +519,7 @@ class LayerProcessingTest(unittest.TestCase):
 
         mock_zaxis.close.assert_called_with()
 
-    @patch('peachyprinter.infrastructure.commander.Commander')
+    @patch('YXE3D.infrastructure.commander.Commander')
     def test_terminate_should_shutdown_commander(self, mock_Commander, mock_ZAxis, mock_Writer):
         mock_zaxis = mock_ZAxis.return_value
         mock_commander = mock_Commander.return_value

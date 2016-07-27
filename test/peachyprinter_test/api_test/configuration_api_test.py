@@ -7,10 +7,10 @@ from mock import patch, MagicMock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.api.configuration_api import ConfigurationAPI
-from peachyprinter.domain.configuration_manager import ConfigurationManager
-from peachyprinter.infrastructure.zaxis import SerialDripZAxis
-from peachyprinter.infrastructure.communicator import UsbPacketCommunicator
+from YXE3D.api.configuration_api import ConfigurationAPI
+from YXE3D.domain.configuration_manager import ConfigurationManager
+from YXE3D.infrastructure.zaxis import SerialDripZAxis
+from YXE3D.infrastructure.communicator import UsbPacketCommunicator
 import test_helpers
 
 
@@ -60,7 +60,7 @@ class DripperSetupMixInTest(object):
 
     @patch.object(ConfigurationManager, 'save')
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     def test_start_counting_drips_should_start_getting_drips(self, mock_UsbPacketCommunicator,  mock_load, mock_save):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         mock_load.return_value = self.default_config
@@ -72,8 +72,8 @@ class DripperSetupMixInTest(object):
 
     @patch.object(ConfigurationManager, 'save')
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     def test_start_counting_drips_should_start_getting_drips_for_microcontroller(self, mock_UsbPacketCommunicator, mock_SerialDripZaxis, mock_load, mock_save):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         config = self.default_config
@@ -90,8 +90,8 @@ class DripperSetupMixInTest(object):
     @patch.object(ConfigurationManager, 'save')
     @patch.object(ConfigurationManager, 'load')
     @patch.object(SerialDripZAxis, 'start')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
     def test_start_counting_drips_should_pass_call_back_function(self, mock_SerialDripZAxis, mock_UsbPacketCommunicator, mock_start, mock_load, mock_save):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         mock_load.return_value = self.default_config
@@ -111,8 +111,8 @@ class DripperSetupMixInTest(object):
 
     @patch.object(ConfigurationManager, 'save')
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     def test_stop_counting_drips_should_stop_getting_drips_for_micro(self, mock_UsbPacketCommunicator, mock_SerialDripZaxis, mock_load, mock_save):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         config = self.default_config
@@ -129,7 +129,7 @@ class DripperSetupMixInTest(object):
     @patch.object(ConfigurationManager, 'save')
     @patch.object(ConfigurationManager, 'load')
     @patch.object(SerialDripZAxis, 'start')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     @patch.object(SerialDripZAxis, 'close')
     def test_stop_counting_drips_should_stop_getting_drips(self, mock_close, mock_UsbPacketCommunicator, mock_start, mock_load, mock_save):
         configuration_API = ConfigurationAPI(ConfigurationManager())
@@ -144,7 +144,7 @@ class DripperSetupMixInTest(object):
     @patch.object(ConfigurationManager, 'save')
     @patch.object(ConfigurationManager, 'load')
     @patch.object(SerialDripZAxis, 'start')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     @patch.object(SerialDripZAxis, 'reset')
     def test_drip_calibration_should_call_reset_when_reset_requested(self, mock_reset, mock_UsbPacketCommunicator, mock_start, mock_load, mock_save):
         configuration_API = ConfigurationAPI(ConfigurationManager())
@@ -168,8 +168,8 @@ class DripperSetupMixInTest(object):
         self.assertEquals(self.default_config.dripper.drips_per_mm, actual)
 
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     @patch.object(ConfigurationManager, 'save')
     def test_set_dripper_drips_per_mm_should_overwrite_current_setting_and_update_zaxis(self, mock_save, mock_UsbPacketCommunicator, mock_SerialDripZAxis, mock_load):
         configuration_API = ConfigurationAPI(ConfigurationManager())
@@ -254,9 +254,9 @@ class DripperSetupMixInTest(object):
         mock_save.assert_called()
 
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.infrastructure.commander.SerialCommander')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.infrastructure.commander.SerialCommander')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     def test_send_dripper_on_command_should_raise_exceptions_if_serial_not_configured(self, mock_UsbPacketCommunicator, mock_Zaxis, mock_SerialCommander, mock_load):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         config = self.default_config
@@ -271,9 +271,9 @@ class DripperSetupMixInTest(object):
         self.assertEquals(0, mock_SerialCommander.call_count)
 
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.api.configuration_api.SerialCommander')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.SerialCommander')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     def test_send_dripper_on_command_should(self, mock_UsbPacketCommunicator, mock_Zaxis, mock_SerialCommander, mock_load):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         config = self.default_config
@@ -291,9 +291,9 @@ class DripperSetupMixInTest(object):
         mock_serial_commander.send_command.assert_called_with("1")
 
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.infrastructure.commander.SerialCommander')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.infrastructure.commander.SerialCommander')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     def test_send_dripper_off_command_should_raise_exceptions_if_serial_not_configured(self, mock_UsbPacketCommunicator, mock_Zaxis, mock_SerialCommander, mock_load):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         config = self.default_config
@@ -308,9 +308,9 @@ class DripperSetupMixInTest(object):
         self.assertEquals(0, mock_SerialCommander.call_count)
 
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.api.configuration_api.SerialCommander')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.SerialCommander')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     def test_send_dripper_off_command_should(self, mock_UsbPacketCommunicator, mock_Zaxis, mock_SerialCommander, mock_load):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         config = self.default_config
@@ -328,9 +328,9 @@ class DripperSetupMixInTest(object):
         mock_serial_commander.send_command.assert_called_with("0")
 
     @patch.object(ConfigurationManager, 'load')
-    @patch('peachyprinter.api.configuration_api.SerialCommander')
-    @patch('peachyprinter.api.configuration_api.SerialDripZAxis')
-    @patch('peachyprinter.api.configuration_api.UsbPacketCommunicator')
+    @patch('YXE3D.api.configuration_api.SerialCommander')
+    @patch('YXE3D.api.configuration_api.SerialDripZAxis')
+    @patch('YXE3D.api.configuration_api.UsbPacketCommunicator')
     def test_stop_counting_drips_should_stop_serial(self, mock_UsbPacketCommunicator, mock_Zaxis, mock_SerialCommander, mock_load):
         configuration_API = ConfigurationAPI(ConfigurationManager())
         config = self.default_config

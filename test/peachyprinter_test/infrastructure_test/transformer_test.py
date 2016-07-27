@@ -7,7 +7,7 @@ import math
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.transformer import OneToOneTransformer, TuningTransformer, HomogenousTransformer
+from YXE3D.infrastructure.transformer import OneToOneTransformer, TuningTransformer, HomogenousTransformer
 
 
 class OneToOneTransformerTests(unittest.TestCase):

@@ -18,7 +18,7 @@ Known Issues
 Support
 --------------------------
 
-All support for Peachy Printer Tools located at http://forum.peachyprinter.com/
+All support for Peachy Printer Tools located at http://forum.YXE3D.com/
 
 
 Contributing 
@@ -36,7 +36,7 @@ In order to be considered please ensure that:
 
 Please be aware that by contributing you agree to assignment of your copyrite to Peachy Printer INC. We do this for logistics and managment we will respect you freedoms and keep this source open.
 
-Need help contributing? Please check out the forums: http://forum.peachyprinter.com/
+Need help contributing? Please check out the forums: http://forum.YXE3D.com/
 
 
 Licence
@@ -73,15 +73,15 @@ Run Suite on Every Change (linux like OS only )
 
 Run the application
 
-**python src/peachyprintertools.py**
+**python src/YXE3Dtools.py**
 
 Run in Debug logger.Mode
 
-**python src/peachyprintertools.py --log=DEBUG**
+**python src/YXE3Dtools.py --log=DEBUG**
 
 Run in DEBUG to Console (Very slow)
 
-**python src/peachyprintertools.py -c --log=DEBUG**
+**python src/YXE3Dtools.py -c --log=DEBUG**
 
 Log Levels:
 + DEBUG
@@ -89,7 +89,7 @@ Log Levels:
 + WARN
 + ERROR
 
-Logs and configs are stored in the user folder in the .peachyprintertools directory.
+Logs and configs are stored in the user folder in the .YXE3Dtools directory.
 
 
 Software Contributers

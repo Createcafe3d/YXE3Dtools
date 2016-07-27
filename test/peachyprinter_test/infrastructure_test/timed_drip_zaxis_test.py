@@ -6,7 +6,7 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.timed_drip_zaxis import TimedDripZAxis, PhotoZAxis
+from YXE3D.infrastructure.timed_drip_zaxis import TimedDripZAxis, PhotoZAxis
 
 
 class TimedDripZaxisTests(unittest.TestCase):

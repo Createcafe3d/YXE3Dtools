@@ -9,7 +9,7 @@ rm -rf src/build
 rm -rf *.dmg
 rm -rf *.tar.gz
 rm -f src/VERSION.py
-rm -rf src/peachyprinter/VERSION.py
+rm -rf src/YXE3D/VERSION.py
 rm -f version.properties 
 
 echo "------------------------------------"
@@ -43,7 +43,7 @@ echo "# THIS IS A GENERATED FILE " > version.properties
 echo "version='$VERSION'" >> version.properties
 echo "revision='$GIT_REV'" >> version.properties
 echo "Git Revision Number is $GIT_REV_COUNT"
-cp version.properties src/peachyprinter/VERSION.py
+cp version.properties src/YXE3D/VERSION.py
 cp version.properties src/VERSION.py
 
 
@@ -67,7 +67,7 @@ if [ $? != 0 ]; then
     echo "FAILED PACKAGING ABORTING"
     exit 56
 fi
-python -m pip install dist/PeachyPrinterToolsAPI-$VERSION.tar.gz
+python -m pip install dist/YXE3DtoolsAPI-$VERSION.tar.gz
 if [ $? != 0 ]; then
     echo "PACKAGE INSTALL FAILED ABORTING"
     exit 56
@@ -88,7 +88,7 @@ if [ $? != 0 ]; then
 fi
 
 
-mv src/dist/PeachyPrinterToolsAPI*.tar.gz .
+mv src/dist/YXE3DtoolsAPI*.tar.gz .
 
 if [ $? != 0 ]; then
     echo "FAILED MOVE PACKAGE ABORTING"

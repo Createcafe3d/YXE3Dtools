@@ -7,8 +7,8 @@ from mock import patch
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.api.test_print_api import TestPrintAPI
-from peachyprinter.infrastructure.print_test_layer_generators import *
+from YXE3D.api.test_print_api import TestPrintAPI
+from YXE3D.infrastructure.print_test_layer_generators import *
 import test_helpers
 
 

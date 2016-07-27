@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.domain.laser_control import LaserControl
+from YXE3D.domain.laser_control import LaserControl
 
 
 class LaserControlTest(unittest.TestCase):

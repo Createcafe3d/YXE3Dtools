@@ -8,8 +8,8 @@ from mock import patch, PropertyMock, call, MagicMock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from peachyprinter.infrastructure.print_test_layer_generators import *
-from peachyprinter.domain.commands import Layer
+from YXE3D.infrastructure.print_test_layer_generators import *
+from YXE3D.domain.commands import Layer
 
 
 class SolidObjectTestGeneratorTest(unittest.TestCase):
