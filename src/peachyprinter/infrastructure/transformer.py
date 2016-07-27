@@ -5,20 +5,54 @@ from peachyprinter.domain.transformer import Transformer
 import threading
 
 class LinerAlgebraTransformer(Transformer):
-    def __init__(self, scale, upper_height, lower_points, upper_points):
-        '''Given upper and lower points as a zippered array of (deflection,distance)
-            where each distance|deflection is (x,y)
+    def __init__(self, upper_height, lower_points, upper_points):
+        '''Given upper_height as the offset to upper points,
+            <upper|lower>_points as a zippered array of (deflection,distance),
+            where each <distance|deflection> are given as (x,y)
             
-            This transform works by creating a linear transform matrix '''
+            This class creates a linear transform matrix that you can transform any size of inputs into.
+            
+            This transform works by creating a linear transform matrix
+            from the matrix P (Positions from calibration) of size n=8:
+            [x0 y0 z0]
+            [x1 y1 z1] = P
+            [  ....  ]
+            [xn yn zn]
 
-        self._scale = scale
+            And the matched matrix D (Deflections as a percentage of "max")
+            [dx0 dy0]
+            [dx1 dy1] = D
+            [  ...  ]
+            [dxn dyn]
+
+            To solve the linear transforms to solve for the "Transform" matrix T:
+            P.T=D
+            with the sizes of: [8x3].[3x2]=[8x2]
+
+            *NOTE: due to matrix magics, you can't just do a simple inverse
+            * to solve the magic matrix equation of T=(P_left^-1).D
+            *
+            * So we take the left inverse, and I chose this cause it made the dimenisons work.
+            *  - That's literally the only reason
+            *  - The pseudo inverse in numpy seems to work too, so that's a nice bi-directional solution
+            * 
+            * Given a matrix A of size [5x3]
+            * Left inverse solves the equation of (A-1).A = I  [3x3]
+            * Right inverse solves the equation of A.(A-1) = I [5x5]
+            * See the difference in sizes, that's important to making the math work.
+            *** leftInverse(A) = inverse(A_t*A)*A_t
+
+            Use the function deflections=transform(np.array([(x,y,z),(xn,yn,zn)])) to use the magic
+            - Output size matches input size for an array of #rows=n
+
+            The stupid inputs was because I didn't want to fix upstream. Feel free to fix that
+            '''
+
         self._upper_height = upper_height
         self._lower_points = lower_points
         self._transform = self._create_transform(lower_points,upper_points,upper_height)
         self._cache = {}
 
-    def set_scale(self, new_scale):
-        pass
 
     def _create_transform(self,lower_points,upper_points,upper_height):
         '''Creates self._transform, you feed it xyz and defliections - this creates the linear transform matrix for use in self.transform()'''
@@ -237,13 +271,11 @@ if __name__ == "__main__":
             (1.0, 0.0): (1.0, -1.0),
             (0.0, 0.0): (-1.0, -1.0)
             }
-    scale = 1.0 
-
     
     example_xyz = (0.2,0.4,0.6)
 
     print "LinTransformerMade"
-    LinTransformer=LinerAlgebraTransformer(scale ,height ,lower_points ,upper_points)
+    LinTransformer=LinerAlgebraTransformer(height ,lower_points ,upper_points)
     deflections = LinTransformer.transform(example_xyz)
     print deflections
 
