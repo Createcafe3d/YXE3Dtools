@@ -7,12 +7,12 @@ import logging
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from YXE3D.infrastructure.communicator import UsbPacketCommunicator
+from peachyprinter.infrastructure.communicator import UsbPacketCommunicator
 
 
 #TODO this really needs to be actually tested
 
-@patch('YXE3D.infrastructure.communicator.PeachyUSB')
+@patch('peachyprinter.infrastructure.communicator.PeachyUSB')
 class UsbPacketCommunicatorTest(unittest.TestCase):
 
 

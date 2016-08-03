@@ -5,8 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from YXE3D.infrastructure.communicator import UsbPacketCommunicator
-from YXE3D.infrastructure.messages import *
+from peachyprinter.infrastructure.communicator import UsbPacketCommunicator
+from peachyprinter.infrastructure.messages import *
 
 
 class UsbTestTerminal(object):

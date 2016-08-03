@@ -1,7 +1,7 @@
 import numpy
 import unittest
-from YXE3D.domain.commands import *
-from YXE3D.infrastructure.configuration import ConfigurationGenerator
+from peachyprinter.domain.commands import *
+from peachyprinter.infrastructure.configuration import ConfigurationGenerator
 
 class NumpyTestHelpers(object):
 

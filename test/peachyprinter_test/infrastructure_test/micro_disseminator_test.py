@@ -9,9 +9,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from test_helpers import TestHelpers
-from YXE3D.infrastructure.micro_disseminator import MicroDisseminator
-from YXE3D.domain.laser_control import LaserControl
-from YXE3D.infrastructure.messages import MoveMessage
+from peachyprinter.infrastructure.micro_disseminator import MicroDisseminator
+from peachyprinter.domain.laser_control import LaserControl
+from peachyprinter.infrastructure.messages import MoveMessage
 
 
 class MicroDisseminatorTests(unittest.TestCase, TestHelpers):

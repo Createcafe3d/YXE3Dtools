@@ -1,6 +1,6 @@
-include YXE3D/dependancies/win/amd64/*.dll
-include YXE3D/dependancies/win/x86/*.dll
-include YXE3D/dependancies/mac/amd64/*.dylib
-include YXE3D/dependancies/linux/amd64/*.so
-include YXE3D/dependancies/firmware/*.bin
-include YXE3D/dependancies/firmware/*.dfu
+include peachyprinter/dependancies/win/amd64/*.dll
+include peachyprinter/dependancies/win/x86/*.dll
+include peachyprinter/dependancies/mac/amd64/*.dylib
+include peachyprinter/dependancies/linux/amd64/*.so
+include peachyprinter/dependancies/firmware/*.bin
+include peachyprinter/dependancies/firmware/*.dfu

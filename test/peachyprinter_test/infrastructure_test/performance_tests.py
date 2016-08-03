@@ -11,10 +11,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 import test_helpers
 from mock import patch
 
-from YXE3D.infrastructure.gcode_layer_generator import GCodeReader, GCodeToLayerGenerator, GCodeCommandReader
-from YXE3D.infrastructure.layer_generators import *
-from YXE3D.infrastructure.transformer import *
-from YXE3D.domain.commands import * 
+from peachyprinter.infrastructure.gcode_layer_generator import GCodeReader, GCodeToLayerGenerator, GCodeCommandReader
+from peachyprinter.infrastructure.layer_generators import *
+from peachyprinter.infrastructure.transformer import *
+from peachyprinter.domain.commands import * 
 
 # class GcodeUnifiedPerformanceTest(unittest.TestCase):
 #     def test_performanace_julia_vase_raw(self):

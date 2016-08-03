@@ -11,9 +11,9 @@ if os.name == 'nt':
 
     current_path = os.path.dirname(__file__)
     if python_64:
-        dep_path = os.path.join(current_path, '..', 'src','YXE3D', 'dependancies', 'win', 'amd64')
+        dep_path = os.path.join(current_path, '..', 'src','peachyprinter', 'dependancies', 'win', 'amd64')
     else:
-        dep_path = os.path.join(current_path, '..', 'src','YXE3D', 'dependancies', 'win', 'x86')
+        dep_path = os.path.join(current_path, '..', 'src','peachyprinter', 'dependancies', 'win', 'x86')
 
     dll_path = os.path.join(dep_path, 'libusb-1.0.dll')
 
