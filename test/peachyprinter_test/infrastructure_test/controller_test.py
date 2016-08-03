@@ -8,12 +8,12 @@ from mock import patch
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from YXE3D.infrastructure.layer_control import *
-from YXE3D.domain.commands import *
-from YXE3D.infrastructure.machine import MachineStatus
-from YXE3D.infrastructure.controller import *
-from YXE3D.infrastructure.layer_generators import StubLayerGenerator
-from YXE3D.infrastructure.communicator import MissingPrinterException
+from peachyprinter.infrastructure.layer_control import *
+from peachyprinter.domain.commands import *
+from peachyprinter.infrastructure.machine import MachineStatus
+from peachyprinter.infrastructure.controller import *
+from peachyprinter.infrastructure.layer_generators import StubLayerGenerator
+from peachyprinter.infrastructure.communicator import MissingPrinterException
 
 @patch('infrastructure.layer_control.LayerWriter')
 @patch('infrastructure.layer_control.LayerProcessing')

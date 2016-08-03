@@ -1,14 +1,14 @@
-from YXE3D.infrastructure import print_test_layer_generators as lg
+from peachyprinter.infrastructure import print_test_layer_generators as lg
 import inspect
-from YXE3D.domain.layer_generator import LayerGenerator
-from YXE3D.domain.commands import LateralMove
+from peachyprinter.domain.layer_generator import LayerGenerator
+from peachyprinter.domain.commands import LateralMove
 import re
 import os
 
 height = 1
 width = 1
 layer_height = 0.05
-out_folder = os.path.join('..', '..', 'kivyYXE3D', 'src', 'resources', 'objects')
+out_folder = os.path.join('..', '..', 'kivypeachyprinter', 'src', 'resources', 'objects')
 
 pattern = re.compile('[\W_]+')
 

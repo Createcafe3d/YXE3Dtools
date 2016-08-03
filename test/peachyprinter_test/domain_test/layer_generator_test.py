@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from YXE3D.domain.layer_generator import TestLayerGenerator
+from peachyprinter.domain.layer_generator import TestLayerGenerator
 
 class TestLayerGeneratorTests(unittest.TestCase):
     def test_set_speed_accepts_positive_numbers_only(self):

@@ -9,7 +9,7 @@ from mock import MagicMock, patch
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from YXE3D.infrastructure.simulator import *
+from peachyprinter.infrastructure.simulator import *
 
 class TestHelp(object):
     epsilon = 0.000001
@@ -160,8 +160,8 @@ class LaserTest(unittest.TestCase,TestHelp):
         with self.assertRaises(Exception):
             laser.fire(0.0)
 
-class YXE3DTest(unittest.TestCase,TestHelp):
-    @patch('YXE3D.infrastructure.simulator.Laser')
+class PeachyPrinterTest(unittest.TestCase,TestHelp):
+    @patch('peachyprinter.infrastructure.simulator.Laser')
     def test_write(self, mock_Laser):
         #Setup
         deflection1 = 1.0
@@ -196,7 +196,7 @@ class YXE3DTest(unittest.TestCase,TestHelp):
             return mirror2_values.pop(0)
         mirror2.reflect.side_effect = mirror2_side_effect
 
-        pp = YXE3D(mirror1, mirror2, laser)
+        pp = PeachyPrinter(mirror1, mirror2, laser)
 
         #Execute
         pp.write(deflection1,deflection2, z_height)

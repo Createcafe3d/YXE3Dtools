@@ -10,7 +10,7 @@ echo ------------------------------------
 del /Q *.msi
 del /Q *.zip
 rmdir /S /Q src\build
-rmdir /S /Q src\YXE3DtoolsAPI.egg-info
+rmdir /S /Q src\PeachyPrinterToolsAPI.egg-info
 rmdir /S /Q src\dist
 rmdir /S /Q venv
 
@@ -62,7 +62,7 @@ echo # THIS IS A GENERATED FILE  > version.properties
 echo version='%VERSION%' >> version.properties
 echo revision='%GIT_REV%' >> version.properties
 echo Git Revision Number is %GIT_REV_COUNT%
-copy version.properties src\YXE3D\VERSION.py
+copy version.properties src\peachyprinter\VERSION.py
 copy version.properties src\VERSION.py
 
 cd src
@@ -77,7 +77,7 @@ IF NOT "%ERRORLEVEL%" == "0" (
     cd ..
     EXIT /B 3
 )
-python -m pip install dist\YXE3DtoolsAPI-%VERSION%.zip
+python -m pip install dist\PeachyPrinterToolsAPI-%VERSION%.zip
 IF NOT "%ERRORLEVEL%" == "0" (
     echo "PACKAGE INSTALL FAILED ABORTING"
     cd ..

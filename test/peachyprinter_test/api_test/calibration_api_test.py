@@ -7,31 +7,31 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import test_helpers
-from YXE3D.api.calibration_api import CalibrationAPI
-from YXE3D.infrastructure.messages import PrinterStatusMessage
+from peachyprinter.api.calibration_api import CalibrationAPI
+from peachyprinter.infrastructure.messages import PrinterStatusMessage
 
-@patch('YXE3D.api.calibration_api.ScaleGenerator')
-@patch('YXE3D.api.calibration_api.OrientationGenerator')
-@patch('YXE3D.api.calibration_api.UsbPacketCommunicator')
-@patch('YXE3D.api.calibration_api.MicroDisseminator')
-@patch('YXE3D.api.calibration_api.LaserControl')
-@patch('YXE3D.domain.configuration_manager.ConfigurationManager')
-@patch('YXE3D.api.calibration_api.HomogenousTransformer')
-@patch('YXE3D.api.calibration_api.MachineState')
-@patch('YXE3D.api.calibration_api.MachineStatus')
-@patch('YXE3D.api.calibration_api.Controller')
-@patch('YXE3D.api.calibration_api.PathToPoints')
-@patch('YXE3D.api.calibration_api.TuningTransformer')
-@patch('YXE3D.api.calibration_api.LayerWriter')
-@patch('YXE3D.api.calibration_api.LayerProcessing')
-@patch('YXE3D.api.calibration_api.SinglePointGenerator')
-@patch('YXE3D.api.calibration_api.BlinkGenerator')
-@patch('YXE3D.api.calibration_api.CalibrationLineGenerator')
-@patch('YXE3D.api.calibration_api.HilbertGenerator')
-@patch('YXE3D.api.calibration_api.SquareGenerator')
-@patch('YXE3D.api.calibration_api.CircleGenerator')
-@patch('YXE3D.api.calibration_api.SpiralGenerator')
-@patch('YXE3D.api.calibration_api.MemoryHourglassGenerator')
+@patch('peachyprinter.api.calibration_api.ScaleGenerator')
+@patch('peachyprinter.api.calibration_api.OrientationGenerator')
+@patch('peachyprinter.api.calibration_api.UsbPacketCommunicator')
+@patch('peachyprinter.api.calibration_api.MicroDisseminator')
+@patch('peachyprinter.api.calibration_api.LaserControl')
+@patch('peachyprinter.domain.configuration_manager.ConfigurationManager')
+@patch('peachyprinter.api.calibration_api.HomogenousTransformer')
+@patch('peachyprinter.api.calibration_api.MachineState')
+@patch('peachyprinter.api.calibration_api.MachineStatus')
+@patch('peachyprinter.api.calibration_api.Controller')
+@patch('peachyprinter.api.calibration_api.PathToPoints')
+@patch('peachyprinter.api.calibration_api.TuningTransformer')
+@patch('peachyprinter.api.calibration_api.LayerWriter')
+@patch('peachyprinter.api.calibration_api.LayerProcessing')
+@patch('peachyprinter.api.calibration_api.SinglePointGenerator')
+@patch('peachyprinter.api.calibration_api.BlinkGenerator')
+@patch('peachyprinter.api.calibration_api.CalibrationLineGenerator')
+@patch('peachyprinter.api.calibration_api.HilbertGenerator')
+@patch('peachyprinter.api.calibration_api.SquareGenerator')
+@patch('peachyprinter.api.calibration_api.CircleGenerator')
+@patch('peachyprinter.api.calibration_api.SpiralGenerator')
+@patch('peachyprinter.api.calibration_api.MemoryHourglassGenerator')
 class CalibrationAPITests(unittest.TestCase, test_helpers.TestHelpers):
 
     def setup_mocks(self, args):
@@ -189,7 +189,7 @@ class CalibrationAPITests(unittest.TestCase, test_helpers.TestHelpers):
         calibration_api.set_laser_off_override(False)
         self.assertFalse(self.mock_controller.laser_off_override)
 
-    @patch('YXE3D.api.calibration_api.CalibrationLineGenerator')
+    @patch('peachyprinter.api.calibration_api.CalibrationLineGenerator')
     def test_show_line_should_use_CalibrationLineGenerator(self, mock_CalibrationLineGenerator, *args):
         self.setup_mocks(args)
         self.mock_configuration_manager.load.return_value = self.default_config
@@ -227,7 +227,7 @@ class CalibrationAPITests(unittest.TestCase, test_helpers.TestHelpers):
         with self.assertRaises(Exception):
             calibration_api.show_test_pattern("Shrubberies")
 
-    @patch('YXE3D.api.calibration_api.HilbertGenerator')
+    @patch('peachyprinter.api.calibration_api.HilbertGenerator')
     def test_change_pattern_should_change_pattern_on_controller(self, mock_HilbertGenerator, *args):
         self.setup_mocks(args)
         self.mock_configuration_manager.load.return_value = self.default_config
@@ -298,7 +298,7 @@ class CalibrationAPITests(unittest.TestCase, test_helpers.TestHelpers):
         self.assertEquals(expected_upper, upper_points_result)
         
 
-    @patch('YXE3D.api.calibration_api.HomogenousTransformer')
+    @patch('peachyprinter.api.calibration_api.HomogenousTransformer')
     def test_show_test_pattern_should_apply_calibration_should_replace_controllers_transformer(self, mock_HomogenousTransformer, *args):
         self.setup_mocks(args)
         self.mock_configuration_manager.load.return_value = self.default_config
@@ -380,7 +380,7 @@ class CalibrationAPITests(unittest.TestCase, test_helpers.TestHelpers):
         self.assertConfigurationEqual(expected_config, self.mock_configuration_manager.save.mock_calls[0][1][0])
         self.mock_path_to_audio.set_transformer.assert_called_with(self.mock_tuning_transformer)
 
-    @patch('YXE3D.api.calibration_api.SquareGenerator')
+    @patch('peachyprinter.api.calibration_api.SquareGenerator')
     def test_show_scale_should_use_Square_Generator_and_Tuning_Transformer(self, mock_SquareGenerator, *args):
         self.setup_mocks(args)
         self.mock_configuration_manager.load.return_value = self.default_config

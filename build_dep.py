@@ -13,4 +13,4 @@ if os.name == 'nt':
         dep_path = os.path.join(source_dir, 'dependancies', 'win', 'x86')
 
     libusb10_dll = os.path.join(dep_path, 'libusb-1.0.dll')
-    shutil.copy(libusb10_dll, os.path.join(source_dir, 'src', 'YXE3D'))
+    shutil.copy(libusb10_dll, os.path.join(source_dir, 'src', 'peachyprinter'))

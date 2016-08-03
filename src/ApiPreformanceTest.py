@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 import time
-from YXE3D import config, PrinterAPI
+from peachyprinter import config, PrinterAPI
 import signal
 import sys
 

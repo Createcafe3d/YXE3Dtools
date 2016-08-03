@@ -6,7 +6,7 @@ import logging
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from YXE3D.infrastructure.messages import MoveMessage, DripRecordedMessage, SetDripCountMessage, MoveToDripCountMessage, IAmMessage, EnterBootloaderMessage, GetAdcValMessage, ReturnAdcValMessage, PrinterStatusMessage
+from peachyprinter.infrastructure.messages import MoveMessage, DripRecordedMessage, SetDripCountMessage, MoveToDripCountMessage, IAmMessage, EnterBootloaderMessage, GetAdcValMessage, ReturnAdcValMessage, PrinterStatusMessage
 
 
 class MoveMesssageTests(unittest.TestCase):

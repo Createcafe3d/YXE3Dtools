@@ -4,30 +4,30 @@ from VERSION import version
 import os
 import glob
 
-# data_files = [('YXE3D/resources/dll', ["YXE3D/dll/libusb-1.0.dll"])]
+# data_files = [('peachyprinter/resources/dll', ["peachyprinter/dll/libusb-1.0.dll"])]
 
 
 setup(
-    name='YXE3DtoolsAPI',
+    name='PeachyPrinterToolsAPI',
     version=version,
     description='Tool Set for calibrating the Peachy Printer and printing models',
     options={},
-    url="http://www.YXE3D.com",
+    url="http://www.peachyprinter.com",
     author="Peachy Printer",
-    author_email="software+YXE3Dtools@YXE3D.com",
-    package_data={'': ['*.dll', 'YXE3D/dependancies/win/amd64/*'],
-                  '': ['*.dll', 'YXE3D/dependancies/win/x86/*'],
-                  '': ['*.dylib', 'YXE3D/dependancies/mac/amd64/*'],
-                  '': ['*.so', 'YXE3D/dependancies/linux/amd64/*'],
-                  '': ['*.bin', 'YXE3D/dependancies/firmware/*'],
-                  '': ['*.dfu', 'YXE3D/dependancies/firmware/*'],
+    author_email="software+peachyprintertools@peachyprinter.com",
+    package_data={'': ['*.dll', 'peachyprinter/dependancies/win/amd64/*'],
+                  '': ['*.dll', 'peachyprinter/dependancies/win/x86/*'],
+                  '': ['*.dylib', 'peachyprinter/dependancies/mac/amd64/*'],
+                  '': ['*.so', 'peachyprinter/dependancies/linux/amd64/*'],
+                  '': ['*.bin', 'peachyprinter/dependancies/firmware/*'],
+                  '': ['*.dfu', 'peachyprinter/dependancies/firmware/*'],
                   },
     install_requires=[
       'protobuf>=2.6.1',
       'pyserial>=2.7',
       'numpy>=1.9.2',
       'libusb1>=1.3.1',
-      'YXE3DFirmwareAPI==0.0.1.63'
+      'PeachyPrinterFirmwareAPI==0.0.1.63'
     ],
     packages=find_packages(),
     py_modules=['VERSION'],

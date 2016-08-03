@@ -1,9 +1,9 @@
-import YXE3D
+import peachyprinter
 
 def callback(data):
     print data
 
-api = YXE3D.PrinterAPI()
+api = peachyprinter.PrinterAPI()
 printers = api.get_available_printers()
 if len(printers) == 0:
     api.add_printer("Example Printer")

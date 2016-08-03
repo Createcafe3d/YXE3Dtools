@@ -7,7 +7,7 @@ from mock import patch
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from YXE3D.infrastructure.notification import *
+from peachyprinter.infrastructure.notification import *
 import test_helpers
 
 class TestEmailGateway(object):

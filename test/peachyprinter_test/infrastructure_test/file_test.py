@@ -9,10 +9,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import test_helpers
-from YXE3D.infrastructure.file import FileWriter
+from peachyprinter.infrastructure.file import FileWriter
 
 @patch.object(os.path, 'isdir')
-@patch('YXE3D.infrastructure.file.wave')
+@patch('peachyprinter.infrastructure.file.wave')
 class FileWriterTests(unittest.TestCase):
     def setUp(self):
         pass

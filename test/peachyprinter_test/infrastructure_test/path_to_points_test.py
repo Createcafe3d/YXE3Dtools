@@ -7,8 +7,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from test_helpers import TestHelpers
-from YXE3D.infrastructure.path_to_points import PathToPoints
-from YXE3D.infrastructure.transformer import OneToOneTransformer, TuningTransformer
+from peachyprinter.infrastructure.path_to_points import PathToPoints
+from peachyprinter.infrastructure.transformer import OneToOneTransformer, TuningTransformer
 
 
 class PathToPointsTests(unittest.TestCase, TestHelpers):
