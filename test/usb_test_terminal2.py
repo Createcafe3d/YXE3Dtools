@@ -197,7 +197,7 @@ if __name__ == '__main__':
     t = UsbTestTerminal(verbose=False); 
     t.identify()
     t.setDrips(0)
-    t.enterBootloader(0xDEADBEEF)
+    #t.enterBootloader(0xDEADBEEF)
     t.identify();
     #sys.exit(0)
     power=1
