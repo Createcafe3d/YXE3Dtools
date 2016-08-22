@@ -3,7 +3,7 @@ YXE3D Tools
 
 Note
 ---------------------------
-This is an API only. To run the full suite for the YXE3D printer, use YXE3D at https://github.com/Createcafe3d/YXE3Dtools
+This is an API only. To run the full suite for the YXE3D printer, use YXE3D at https://github.com/Createcafe3d/YXE3D
 
 
 Known Issues
@@ -20,9 +20,9 @@ Contributing
 
 Yes please. 
 
-The YXE3D is continuing the philosophy of it's parent - The Peachy Printer. Its software is community driven, send us a pull request.
+The YXE3D is continuing the philosophy of it's parent - The Peachy Printer. Its software is community driven, just send us a pull request :)
 
-In order to be considered please ensure that:
+In order to maintain chaos, please try and ensure:
 + Test Driven Design (TDD) write your tests first then write the code to make them work.
 + Respect the Single Responsibility Principal
 + Follow Onion Architecture Principals
