@@ -141,7 +141,7 @@ from peachyprinter.domain.commands import *
 #         print("Mean: %s" % (sum(layer_times) / len(layer_times) * 1.0))
 #         afile.close()
 
-class HomogenousTransformerTest(unittest.TestCase):
+class LinearAlgebraTransformerTest(unittest.TestCase):
     def get_layers(self):
         afile = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'test_data','julia.gcode'), 'r')
         layers = GCodeReader(afile).get_layers()
@@ -178,8 +178,8 @@ class HomogenousTransformerTest(unittest.TestCase):
                 (1.0, 0.0):( 50.0, -50.0),
                 (0.0, 0.0):(-50.0, -50.0)
                 }
-        scale = 1.0
-        transformer = HomogenousTransformer(scale,height,lower_points,upper_points)
+
+        transformer = LinearAlgebraTransformerTestTransformer(height,lower_points,upper_points)
 
         start_time = time.time()
         for point in points:
@@ -193,6 +193,66 @@ class HomogenousTransformerTest(unittest.TestCase):
         print("Longest: %s" % max(point_times))
         print("Shortest: %s" % min(point_times))
         print("Mean: %s" % (sum(point_times) / len(point_times) * 1.0))
+
+# Total Time: 750.7529459 
+# Points: 2268404
+# Longest: 0.0162670612335
+# Shortest: 0.000221014022827
+# Mean: 0.000330474715383
+
+
+#class HomogenousTransformerTest(unittest.TestCase):
+#    def get_layers(self):
+#        afile = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'test_data','julia.gcode'), 'r')
+#        layers = GCodeReader(afile).get_layers()
+#        layer_list = list(layers)
+#        print("Layers: %s" % len(layer_list))
+#        return layer_list
+#
+#    def get_points(self):
+#        points = []
+#        for layer in self.get_layers():
+#            for command in layer.commands:
+#                points.append((command.start[0],command.start[1],layer.z))
+#                points.append((command.end[0],command.end[1],layer.z))
+#        return points
+#
+#    def test_performanace(self):
+#        print("Loading data into memeory")
+#        points = self.get_points()
+#        print("Data Loaded")
+#        point_times = []
+#        
+#        running = True
+#
+#        height = 50.0  
+#        lower_points = { 
+#                (1.0, 1.0):( 600.0,  60.0),
+#                (0.0, 1.0):(-600.0,  60.0),
+#                (1.0, 0.0):( 600.0, -60.0),
+#                (0.0, 0.0):(-600.0, -60.0)
+#                }
+#        upper_points = { 
+#                (1.0, 1.0):( 50.0,  50.0),
+#                (0.0, 1.0):(-50.0,  50.0),
+#                (1.0, 0.0):( 50.0, -50.0),
+#                (0.0, 0.0):(-50.0, -50.0)
+#                }
+#        scale = 1.0
+#        transformer = HomogenousTransformer(scale,height,lower_points,upper_points)
+#
+#        start_time = time.time()
+#        for point in points:
+#            point_start = time.time()
+#            transformer.transform(point)
+#            point_times.append(time.time() - point_start)
+#        total_time = time.time() - start_time
+#        print("Transformer Times")
+#        print("Total Time: %s " % total_time)
+#        print("Points: %s" % len(point_times))
+#        print("Longest: %s" % max(point_times))
+#        print("Shortest: %s" % min(point_times))
+#        print("Mean: %s" % (sum(point_times) / len(point_times) * 1.0))
 
 # Total Time: 750.7529459 
 # Points: 2268404

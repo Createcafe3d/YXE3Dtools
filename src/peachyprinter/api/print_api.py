@@ -12,7 +12,7 @@ from peachyprinter.domain.laser_control import LaserControl
 from peachyprinter.infrastructure.micro_disseminator import MicroDisseminator
 from peachyprinter.infrastructure.communicator import UsbPacketCommunicator, NullCommunicator
 from peachyprinter.infrastructure.gcode_layer_generator import GCodeReader
-from peachyprinter.infrastructure.transformer import HomogenousTransformer
+from peachyprinter.infrastructure.transformer import LinearAlgebraTransformer
 from peachyprinter.infrastructure.layer_generators import SubLayerGenerator, ShuffleGenerator, OverLapGenerator
 from peachyprinter.infrastructure.commander import SerialCommander, NullCommander
 from peachyprinter.infrastructure.notification import EmailNotificationService, EmailGateway
@@ -181,8 +181,8 @@ class PrintAPI(object):
 
         self.laser_control = LaserControl(self._configuration.cure_rate.override_laser_power_amount)
 
-        transformer = HomogenousTransformer(
-            self._configuration.calibration.max_deflection,
+        #transformer = HomogenousTransformer(
+        transformer = LinearAlgebraTransformer(
             self._configuration.calibration.height,
             self._configuration.calibration.lower_points,
             self._configuration.calibration.upper_points,

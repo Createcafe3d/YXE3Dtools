@@ -16,7 +16,7 @@ from peachyprinter.infrastructure.messages import PrinterStatusMessage
 @patch('peachyprinter.api.calibration_api.MicroDisseminator')
 @patch('peachyprinter.api.calibration_api.LaserControl')
 @patch('peachyprinter.domain.configuration_manager.ConfigurationManager')
-@patch('peachyprinter.api.calibration_api.HomogenousTransformer')
+@patch('peachyprinter.api.calibration_api.LinearAlgebraTransformer')
 @patch('peachyprinter.api.calibration_api.MachineState')
 @patch('peachyprinter.api.calibration_api.MachineStatus')
 @patch('peachyprinter.api.calibration_api.Controller')
@@ -41,7 +41,7 @@ class CalibrationAPITests(unittest.TestCase, test_helpers.TestHelpers):
         self.mock_MicroDisseminator =                    args[18]
         self.mock_LaserControl =                         args[17]
         self.mock_ConfigurationManager =                 args[16]
-        self.mock_HomogenousTransformer =                args[15]
+        self.mock_LinearAlgebraTransformer =                args[15]
         self.mock_MachineState =                         args[14]
         self.mock_MachineStatus =                        args[13]
         self.mock_Controller =                           args[12]
@@ -64,7 +64,7 @@ class CalibrationAPITests(unittest.TestCase, test_helpers.TestHelpers):
         self.mock_micro_disseminator =                   self.mock_MicroDisseminator.return_value
         self.mock_laser_control =                        self.mock_LaserControl.return_value
         self.mock_configuration_manager =                self.mock_ConfigurationManager.return_value
-        self.mock_homogenous_transformer =               self.mock_HomogenousTransformer.return_value
+        self.mock_homogenous_transformer =               self.mock_LinearAlgebraTransformer.return_value
         self.mock_machine_state =                        self.mock_MachineState.return_value
         self.mock_machine_status =                       self.mock_MachineStatus.return_value
         self.mock_controller =                           self.mock_Controller.return_value
@@ -298,16 +298,15 @@ class CalibrationAPITests(unittest.TestCase, test_helpers.TestHelpers):
         self.assertEquals(expected_upper, upper_points_result)
         
 
-    @patch('peachyprinter.api.calibration_api.HomogenousTransformer')
-    def test_show_test_pattern_should_apply_calibration_should_replace_controllers_transformer(self, mock_HomogenousTransformer, *args):
+    @patch('peachyprinter.api.calibration_api.LinearAlgebraTransformer')
+    def test_show_test_pattern_should_apply_calibration_should_replace_controllers_transformer(self, mock_LinearAlgebraTransformer, *args):
         self.setup_mocks(args)
         self.mock_configuration_manager.load.return_value = self.default_config
         calibration_api = CalibrationAPI(self.mock_configuration_manager)
 
         calibration_api.show_test_pattern('Hilbert Space Filling Curve')
 
-        self.mock_HomogenousTransformer.assert_called_with(
-            self.default_config.calibration.max_deflection,
+        self.mock_LinearAlgebraTransformer.assert_called_with(
             self.default_config.calibration.height,
             self.default_config.calibration.lower_points,
             self.default_config.calibration.upper_points,

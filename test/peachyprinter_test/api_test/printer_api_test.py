@@ -168,7 +168,7 @@ class PrintQueueAPITests(unittest.TestCase, test_helpers.TestHelpers):
 @patch('peachyprinter.api.print_api.MachineStatus')
 @patch('peachyprinter.api.print_api.Controller')
 @patch('peachyprinter.api.print_api.PathToPoints')
-@patch('peachyprinter.api.print_api.HomogenousTransformer')
+@patch('peachyprinter.api.print_api.LinearAlgebraTransformer')
 @patch('peachyprinter.api.print_api.GCodeReader')
 @patch('peachyprinter.api.print_api.SubLayerGenerator')
 @patch('peachyprinter.api.print_api.NullCommander')
@@ -193,7 +193,7 @@ class PrintAPITests(unittest.TestCase, test_helpers.TestHelpers):
         self.mock_MachineStatus =                 args[9]
         self.mock_Controller =                    args[8]
         self.mock_PathToPoints =                  args[7]
-        self.mock_HomogenousTransformer =         args[6]
+        self.mock_LinearAlgebraTransformer =         args[6]
         self.mock_GCodeReader =                   args[5]
         self.mock_SubLayerGenerator =             args[4]
         self.mock_NullCommander =                 args[3]
@@ -216,7 +216,7 @@ class PrintAPITests(unittest.TestCase, test_helpers.TestHelpers):
         self.mock_machine_status =                  self.mock_MachineStatus.return_value
         self.mock_controller =                      self.mock_Controller.return_value
         self.mock_path_to_audio =                   self.mock_PathToPoints.return_value
-        self.mock_homogenous_transformer =          self.mock_HomogenousTransformer.return_value
+        self.mock_homogenous_transformer =          self.mock_LinearAlgebraTransformer.return_value
         self.mock_g_code_reader =                   self.mock_GCodeReader.return_value
         self.mock_sub_layer_generator =             self.mock_SubLayerGenerator.return_value
         self.mock_null_commander =                  self.mock_NullCommander.return_value
@@ -269,8 +269,7 @@ class PrintAPITests(unittest.TestCase, test_helpers.TestHelpers):
 
         self.assertEquals(0, self.mock_usb_packet_communicator.call_count)
 
-        self.mock_HomogenousTransformer.assert_called_with(
-            config.calibration.max_deflection,
+        self.mock_LinearAlgebraTransformer.assert_called_with(
             config.calibration.height,
             config.calibration.lower_points,
             config.calibration.upper_points,

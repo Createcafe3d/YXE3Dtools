@@ -4,7 +4,7 @@ logger = logging.getLogger('peachy')
 from peachyprinter.domain.transformer import Transformer
 import threading
 
-class LinerAlgebraTransformer(Transformer):
+class LinearAlgebraTransformer(Transformer):
     def __init__(self, upper_height, lower_points, upper_points):
         '''Given upper_height as the offset to upper points,
             <upper|lower>_points as a zippered array of (deflection,distance),
@@ -275,7 +275,7 @@ if __name__ == "__main__":
     example_xyz = (0.2,0.4,0.6)
 
     print "LinTransformerMade"
-    LinTransformer=LinerAlgebraTransformer(height ,lower_points ,upper_points)
+    LinTransformer=LinearAlgebraTransformer(height ,lower_points ,upper_points)
     deflections = LinTransformer.transform(example_xyz)
     print deflections
 

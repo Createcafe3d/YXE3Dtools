@@ -6,7 +6,7 @@ from peachyprinter.infrastructure.communicator import UsbPacketCommunicator
 from peachyprinter.infrastructure.messages import PrinterStatusMessage
 from peachyprinter.domain.laser_control import LaserControl
 from peachyprinter.infrastructure.micro_disseminator import MicroDisseminator
-from peachyprinter.infrastructure.transformer import TuningTransformer, HomogenousTransformer
+from peachyprinter.infrastructure.transformer import TuningTransformer, LinearAlgebraTransformer
 from peachyprinter.infrastructure.layer_generators import *
 from peachyprinter.infrastructure.machine import *
 from peachyprinter.infrastructure.layer_control import LayerWriter, LayerProcessing
@@ -280,8 +280,7 @@ class CalibrationAPI(object):
 
     def _apply_calibration(self):
         self._path_to_points.set_transformer(
-            HomogenousTransformer(
-                self._configuration.calibration.max_deflection,
+            LinearAlgebraTransformer(
                 self._configuration.calibration.height,
                 self._configuration.calibration.lower_points,
                 self._configuration.calibration.upper_points
