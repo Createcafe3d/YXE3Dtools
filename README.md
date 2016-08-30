@@ -1,26 +1,18 @@
-Peachy Printer Tools
+YXE3D Tools
 ==================
-
-Status
--------------------------
-
-Active Development as of 29-Feb-2016
 
 Note
 ---------------------------
-This is an API only to run the full suite of peachy printer use peachyprinter at https://github.com/PeachyPrinter/peachyprinter
+This is an API only. To run the full suite for the YXE3D printer, use YXE3D at https://github.com/Createcafe3d/YXE3D
 
 
 Known Issues
 --------------------------
 
 Calibration can be poor in some circumstances
-Low level error are not raised properly
+* New code is being tried on the calibration branch
 
-Support
---------------------------
-
-All support for Peachy Printer Tools located at http://forum.peachyprinter.com/
+Low level errors are not raised properly on usb disconnect
 
 
 Contributing 
@@ -28,17 +20,13 @@ Contributing
 
 Yes please. 
 
-Peachy Printer and it software are community driven, Please send us a pull request.
+The YXE3D is continuing the philosophy of it's parent - The Peachy Printer. Its software is community driven, just send us a pull request :)
 
-In order to be considered please ensure that:
+In order to maintain chaos, please try and ensure:
 + Test Driven Design (TDD) write your tests first then write the code to make them work.
 + Respect the Single Responsibility Principal
 + Follow Onion Architecture Principals
 + PEP8 formatting [Excpeting line length(E501) we are not programming on terminals anymore]
-
-Please be aware that by contributing you agree to assignment of your copyrite to Peachy Printer INC. We do this for logistics and managment we will respect you freedoms and keep this source open.
-
-Need help contributing? Please check out the forums: http://forum.peachyprinter.com/
 
 
 Licence
@@ -75,9 +63,12 @@ Run Suite on Every Change (linux like OS only )
 
 
 
-
 Software Contributers
 --------------------------
+**CreateCafe Team**
++ Will Topping
++ 
 
+**Original Peachy Team**
 + James Townley (Lead)
 + https://github.com/Pete5746218
