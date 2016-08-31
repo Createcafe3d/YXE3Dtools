@@ -69,10 +69,6 @@ class LinearAlgebraTransformer(Transformer):
         lower_3d_distances = np.concatenate((lower_distances, [(0,)]*4), axis=1)
         upper_3d_distances = np.concatenate((upper_distances, [(upper_height,)]*4), axis=1)
 
-        #Concatenate 1 at the end for the translation constant thingy
-        lower_3d_distances_constant = np.concatenate((lower_3d_distances, [(1,)]*4), axis=1)
-        upper_3d_distances_constant = np.concatenate((upper_3d_distances, [(1,)]*4), axis=1)
-
         #Bring it all together into a long array
         distances_3d = np.concatenate((lower_3d_distances_constant, upper_3d_distances_constant), axis=0)
         distances_3d_inv = self._left_inverse(distances_3d)
@@ -82,7 +78,7 @@ class LinearAlgebraTransformer(Transformer):
         deflections = np.concatenate((lower_deflections,upper_deflections), axis=0)
         transform = np.dot(distances_3d_inv, deflections)
 
-        if (False):
+        if (True):
             print "####### P matrix ############"
             print distances_3d
             print "####### P^-1 (left) matrix ############"
@@ -92,6 +88,14 @@ class LinearAlgebraTransformer(Transformer):
             print "####### T matrix ############"
             print transform
         return transform
+
+    def _get_deflection_centroid(self,matrix):
+        ''' gets the calibration centroid of set of coordinates each in a seperate row as a percent of max '''
+        for coordinate in matrix:
+            pass
+        centroid = (0,0)
+        return centroid
+
 
     def _left_inverse(self,matrix):
         ''' leftInverse(A) = inverse(A_t*A)*A_t'''
