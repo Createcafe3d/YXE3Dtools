@@ -69,28 +69,28 @@ class LinearAlgebraTransformer(Transformer):
         lower_3d_distances = np.concatenate((lower_distances, [(0,)]*4), axis=1)
         upper_3d_distances = np.concatenate((upper_distances, [(upper_height,)]*4), axis=1)
 
+        #Concatenate 1 at the end for the translation constant thingy
         lower_3d_distances_constant = np.concatenate((lower_3d_distances, [(1,)]*4), axis=1)
         upper_3d_distances_constant = np.concatenate((upper_3d_distances, [(1,)]*4), axis=1)
 
-
+        #Bring it all together into a long array
         distances_3d = np.concatenate((lower_3d_distances_constant, upper_3d_distances_constant), axis=0)
-        #distances_3d = np.concatenate((lower_3d_distances, upper_3d_distances), axis=0)
-        print "####### P matrix ############"
-        print distances_3d
-
         distances_3d_inv = self._left_inverse(distances_3d)
-        print "####### P^-1 (left) matrix ############"
-        print distances_3d_inv
-
-        #linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
+        #np's linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
         #other_distances_3d_inv = np.linalg.pinv(distances_3d)
 
         deflections = np.concatenate((lower_deflections,upper_deflections), axis=0)
-        print "####### D matrix ############"
-        print deflections
         transform = np.dot(distances_3d_inv, deflections)
-        print "####### T matrix ############"
-        print transform
+
+        if (False):
+            print "####### P matrix ############"
+            print distances_3d
+            print "####### P^-1 (left) matrix ############"
+            print distances_3d_inv
+            print "####### D matrix ############"
+            print deflections
+            print "####### T matrix ############"
+            print transform
         return transform
 
     def _left_inverse(self,matrix):
@@ -319,5 +319,13 @@ if __name__ == "__main__":
     example_xyz = (0.0,0.0,50.0)
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections after 50mm centered: {0}".format(deflections)
+
+    import time
+    now=time.time()
+    iterations=100000
+    for i in range(1,iterations):
+        deflections = LinTransformer.transform(example_xyz)
+    after=time.time()
+    print "{0} iterations of transform took {1} seconds".format(iterations,after-now)
 
     
