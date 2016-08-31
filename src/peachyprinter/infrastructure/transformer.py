@@ -69,15 +69,28 @@ class LinearAlgebraTransformer(Transformer):
         lower_3d_distances = np.concatenate((lower_distances, [(0,)]*4), axis=1)
         upper_3d_distances = np.concatenate((upper_distances, [(upper_height,)]*4), axis=1)
 
+        lower_3d_distances_constant = np.concatenate((lower_3d_distances, [(1,)]*4), axis=1)
+        upper_3d_distances_constant = np.concatenate((upper_3d_distances, [(1,)]*4), axis=1)
 
-        distances_3d = np.concatenate((lower_3d_distances, upper_3d_distances), axis=0)
+
+        distances_3d = np.concatenate((lower_3d_distances_constant, upper_3d_distances_constant), axis=0)
+        #distances_3d = np.concatenate((lower_3d_distances, upper_3d_distances), axis=0)
+        print "####### P matrix ############"
+        print distances_3d
+
         distances_3d_inv = self._left_inverse(distances_3d)
+        print "####### P^-1 (left) matrix ############"
+        print distances_3d_inv
 
         #linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
         #other_distances_3d_inv = np.linalg.pinv(distances_3d)
 
         deflections = np.concatenate((lower_deflections,upper_deflections), axis=0)
+        print "####### D matrix ############"
+        print deflections
         transform = np.dot(distances_3d_inv, deflections)
+        print "####### T matrix ############"
+        print transform
         return transform
 
     def _left_inverse(self,matrix):
@@ -90,8 +103,8 @@ class LinearAlgebraTransformer(Transformer):
         return left_inverse
 
     def transform(self,xyz_point):
-
-        deflections = np.dot(xyz_point,self._transform)
+        xyz_d=(xyz_point[0], xyz_point[1], xyz_point[2], 1)
+        deflections = np.dot(xyz_d,self._transform)
         return deflections
 
 
@@ -256,27 +269,55 @@ class HomogenousTransformer(Transformer):
 
 if __name__ == "__main__":
     #adhock debug:
-    height = 1.0 
+    height = 50.0 
 
     #(deflection,distance)
+    lower_points_real = { 
+            (0.6807058823529412, 0.31967914438502676): (-20.0, 20.0),
+            (0.6759144, 0.6752727): (20.0, 20.0),
+            (0.2768556149732621, 0.6595294117647058): (20.0, -20.0),
+            (0.2850695187165776, 0.3080427807486631): (-20.0, -20.0)
+            }
+    upper_points_real = { 
+            (0.7645561497326203, 0.7457754010695187): (20.0, 20.0),
+            (0.7635294117647059, 0.2402139037433155): (-20.0, 20.0),
+            (0.1868449197860963, 0.22481283422459894): (-20.0, -20.0),
+            (0.1680213903743315, 0.7210695187165775): (20.0, -20.0)
+            }
+
     lower_points = { 
-            (1.0, 1.0): (1.0, 1.0),
-            (0.0, 1.0): (-1.0, 1.0),
-            (1.0, 0.0): (1.0, -1.0),
-            (0.0, 0.0): (-1.0, -1.0)
+            (0.90, 0.90): (20.0, 20.0),
+            (0.90, 0.10): (-20.0, 20.0),
+            (0.10, 0.90): (20.0, -20.0),
+            (0.10, 0.10): (-20.0, -20.0)
             }
     upper_points = { 
-            (1.0, 1.0): (1.0, 1.0),
-            (0.0, 1.0): (-1.0, 1.0),
-            (1.0, 0.0): (1.0, -1.0),
-            (0.0, 0.0): (-1.0, -1.0)
+            (0.99, 0.99): (20.0, 20.0),
+            (0.99, 0.01): (-20.0, 20.0),
+            (0.01, 0.01): (-20.0, -20.0),
+            (0.01, 0.99): (20.0, -20.0)
             }
+
+    print "Upper points:"
+    print upper_points
+
+    print "Lower Points:"
+    print lower_points
     
-    example_xyz = (0.2,0.4,0.6)
+    example_xyz = (0.0,0.0,0.0)
 
     print "LinTransformerMade"
-    LinTransformer=LinearAlgebraTransformer(height ,lower_points ,upper_points)
+    LinTransformer=LinearAlgebraTransformer(height ,lower_points_real ,upper_points_real)
+    #LinTransformer=LinearAlgebraTransformer(height ,lower_points, upper_points)
     deflections = LinTransformer.transform(example_xyz)
-    print deflections
+    print "Deflections at 0mm centered: {0}".format(deflections)
+
+    example_xyz = (0.0,0.0,10.0)
+    deflections = LinTransformer.transform(example_xyz)
+    print "Deflections after 10mm centered: {0}".format(deflections)
+
+    example_xyz = (0.0,0.0,50.0)
+    deflections = LinTransformer.transform(example_xyz)
+    print "Deflections after 50mm centered: {0}".format(deflections)
 
     
