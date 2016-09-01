@@ -17,20 +17,20 @@ class LinearAlgebraTransformer(Transformer):
             
             This transform works by creating a linear transform matrix
             from the matrix P (Positions from calibration) of size n=8:
-            [x0 y0 z0 1]
-            [x1 y1 z1 1] = P
+            [x0 y0 z0 0]
+            [x1 y1 z1 0] = P
             [   ....   ]
             [xn yn zn 1]
 
             And the matched matrix D (Deflections as a percentage of "max")
-            [dx0 dy0 z0 1]
-            [dx1 dy1 z1 1] = D
+            [dx0 dy0 z0 0]
+            [dx1 dy1 z1 0] = D
             [    ....    ]
             [dxn dyn zn 1]
 
             To solve the linear transforms to solve for the "Transform" matrix T:
             P.T=D
-            with the sizes of: [8x4].[4x4]=[8x4]
+            with the sizes of: [4x4].[4x4]=[4x4]
 
             *NOTE: due to matrix magics, you can't just do a simple inverse
             * to solve the magic matrix equation of T=(P_left^-1).D
@@ -84,6 +84,7 @@ class LinearAlgebraTransformer(Transformer):
         upper_deflections = [deflection for (deflection, distance) in upper_points.items()]
         lower_distances = [distance for (deflection, distance) in lower_points.items()]
         lower_deflections = [deflection for (deflection, distance) in lower_points.items()]
+        lower_height = 0
 
         #TODO: CLean this up if the 4x4 matrix works
         #centroids = self._get_centroids((upper_points, lower_points))
@@ -98,11 +99,13 @@ class LinearAlgebraTransformer(Transformer):
         #Bring it all together into 4x4 arrays
         #upper_3d_distances = np.concatenate(((upper_distances[1],upper_distances[2]), [(upper_height,0)]*2), axis=1)
         #lower_3d_distances = np.concatenate(((lower_distances[0],lower_distances[3]), [(0,0),(0,1)]), axis=1)
-        upper_3d_distances = np.concatenate((upper_distances, [(upper_height,1)]*4), axis=1)
-        lower_3d_distances = np.concatenate((lower_distances, [(0,1)]*4), axis=1)
+        #upper_3d_distances = np.concatenate((upper_distances[0], [(upper_height,0)]), axis=1) #(x,y,z,0)
+        upper_3d_distances = [(upper_distances[0][0], upper_distances[0][1], upper_height, 0)]
+        lower_3d_distances = np.concatenate((((lower_distances[0], lower_distances[2])), [(lower_height,0)]*2), axis=1)
+        scale_distances = [(0,0,0,1)]
 
         distances_3d = np.concatenate((upper_3d_distances, lower_3d_distances), axis=0)
-        distances_3d_inv = pinv(distances_3d)
+        distances_3d = np.concatenate((distances_3d, scale_distances), axis=0)
 
         #np's linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
         #distances_3d_inv = inv(distances_3d)
@@ -112,22 +115,29 @@ class LinearAlgebraTransformer(Transformer):
         #Concatenate the height and constant to finish the output side of the array
         #upper_deflections = np.concatenate(((upper_deflections[1], upper_deflections[2]), [(upper_height,0)]*2), axis=1)
         #lower_deflections = np.concatenate(((lower_deflections[0], lower_deflections[3]), [(0,0), (0,1)]), axis=1)
-        upper_deflections = np.concatenate((upper_deflections, [(upper_height,1)]*4), axis=1)
-        lower_deflections = np.concatenate((lower_deflections, [(0,1)]*4), axis=1)
-        deflections = np.concatenate((upper_deflections,lower_deflections), axis=0)
+        upper_deflections= [(upper_deflections[0][0], upper_deflections[0][1], upper_height, 0)]
+        lower_deflections = np.concatenate(((lower_deflections[0],lower_deflections[2]), [(0,lower_height)]*2), axis=1)
 
-        #solve T = P^-1 . D
-        transform = np.dot(distances_3d_inv,deflections)
+        deflections = np.concatenate((upper_deflections, lower_deflections), axis=0)
+        deflections = np.concatenate((deflections, scale_distances), axis=0)
+        deflections_inv = inv(deflections)
+
+        #solve T =  P^-1 . D 
+        transform_inv = np.dot(deflections_inv, distances_3d)
+        transform = inv(transform_inv)
 
         if (True):
             print "P.T=D"
-            print "T=P-1.D"
+            print "T^-1 = D^-1 . P"
+            print "T = (T^-1)^-1"
             print "####### P matrix ############"
             print distances_3d
-            print "####### P^-1 matrix ############"
-            print distances_3d_inv
             print "####### D matrix ############"
             print deflections 
+            print "####### D^-1 matrix ############"
+            print deflections_inv
+            print "####### T^-1 matrix ############"
+            print transform_inv
             print "####### T matrix ############"
             print transform
         return transform
@@ -345,12 +355,12 @@ if __name__ == "__main__":
             (0.01, 0.99): (20.0, -20.0)
             }
 
-    print "Upper points:"
-    print upper_points
+    #print "Upper points:"
+    #print upper_points
 
-    print "Lower Points:"
-    print lower_points
-    
+    #print "Lower Points:"
+    #print lower_points
+    #
     example_xyz = (0.0,0.0,0.0)
 
     print "LinTransformerMade"
