@@ -14,20 +14,20 @@ class LinearAlgebraTransformer(Transformer):
             
             This transform works by creating a linear transform matrix
             from the matrix P (Positions from calibration) of size n=8:
-            [x0 y0 z0]
-            [x1 y1 z1] = P
-            [  ....  ]
-            [xn yn zn]
+            [x0 y0 z0 1]
+            [x1 y1 z1 1] = P
+            [   ....   ]
+            [xn yn zn 1]
 
             And the matched matrix D (Deflections as a percentage of "max")
-            [dx0 dy0]
-            [dx1 dy1] = D
-            [  ...  ]
-            [dxn dyn]
+            [dx0 dy0 z0 1]
+            [dx1 dy1 z1 1] = D
+            [    ....    ]
+            [dxn dyn zn 1]
 
             To solve the linear transforms to solve for the "Transform" matrix T:
             P.T=D
-            with the sizes of: [8x3].[3x2]=[8x2]
+            with the sizes of: [8x4].[4x4]=[8x4]
 
             *NOTE: due to matrix magics, you can't just do a simple inverse
             * to solve the magic matrix equation of T=(P_left^-1).D
@@ -347,9 +347,25 @@ if __name__ == "__main__":
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections at 0mm centered: {0}".format(deflections)
 
-    example_xyz = (0.0,0.0,10.0)
+    example_xyz = (10.0,10.0,10.0)
     deflections = LinTransformer.transform(example_xyz)
-    print "Deflections after 10mm centered: {0}".format(deflections)
+    print "Deflections for {0} = {1}".format(example_xyz, deflections)
+    example_xyz = (20.0,10.0,10.0)
+    deflections = LinTransformer.transform(example_xyz)
+    print "Deflections for {0} = {1}".format(example_xyz, deflections)
+    example_xyz = (10.0,20.0,10.0)
+    deflections = LinTransformer.transform(example_xyz)
+    print "Deflections for {0} = {1}".format(example_xyz, deflections)
+
+    example_xyz = (10.0,10.0,20.0)
+    deflections = LinTransformer.transform(example_xyz)
+    print "Deflections for {0} = {1}".format(example_xyz, deflections)
+    example_xyz = (20.0,10.0,20.0)
+    deflections = LinTransformer.transform(example_xyz)
+    print "Deflections for {0} = {1}".format(example_xyz, deflections)
+    example_xyz = (10.0,20.0,20.0)
+    deflections = LinTransformer.transform(example_xyz)
+    print "Deflections for {0} = {1}".format(example_xyz, deflections)
 
     example_xyz = (0.0,0.0,50.0)
     deflections = LinTransformer.transform(example_xyz)
