@@ -1,4 +1,7 @@
+from numpy.linalg import inv
+from numpy.linalg import pinv
 import numpy as np
+
 import logging
 logger = logging.getLogger('peachy')
 from peachyprinter.domain.transformer import Transformer
@@ -92,30 +95,39 @@ class LinearAlgebraTransformer(Transformer):
         #[(1,1),(2,2)] is an array 2X2 with 1's on top and 2's on the bottom 
         #np.concatenate axis=1 is colum concatenate, axis=0 is concatenating a new row
 
-        #Bring it all together into a long 8x4 array
-        upper_3d_distances = np.concatenate((upper_distances, [(upper_height,)]*4), axis=1)
-        lower_3d_distances = np.concatenate((lower_distances, [(0,)]*4), axis=1)
+        #Bring it all together into 4x4 arrays
+        #upper_3d_distances = np.concatenate(((upper_distances[1],upper_distances[2]), [(upper_height,0)]*2), axis=1)
+        #lower_3d_distances = np.concatenate(((lower_distances[0],lower_distances[3]), [(0,0),(0,1)]), axis=1)
+        upper_3d_distances = np.concatenate((upper_distances, [(upper_height,1)]*4), axis=1)
+        lower_3d_distances = np.concatenate((lower_distances, [(0,1)]*4), axis=1)
 
         distances_3d = np.concatenate((upper_3d_distances, lower_3d_distances), axis=0)
-        distances_3d = np.concatenate((distances_3d, [(1,)]*8), axis=1)
-        distances_3d_inv = self._left_inverse(distances_3d)
+        distances_3d_inv = pinv(distances_3d)
 
         #np's linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
+        #distances_3d_inv = inv(distances_3d)
         #distances_3d_inv = np.linalg.pinv(distances_3d)
+        #distances_3d_inv = self._left_inverse(distances_3d)
 
         #Concatenate the height and constant to finish the output side of the array
-        upper_deflections = np.concatenate((upper_deflections,[(upper_height,1)]*4), axis=1)
-        lower_deflections = np.concatenate((lower_deflections,[(0,1)]*4), axis=1)
+        #upper_deflections = np.concatenate(((upper_deflections[1], upper_deflections[2]), [(upper_height,0)]*2), axis=1)
+        #lower_deflections = np.concatenate(((lower_deflections[0], lower_deflections[3]), [(0,0), (0,1)]), axis=1)
+        upper_deflections = np.concatenate((upper_deflections, [(upper_height,1)]*4), axis=1)
+        lower_deflections = np.concatenate((lower_deflections, [(0,1)]*4), axis=1)
         deflections = np.concatenate((upper_deflections,lower_deflections), axis=0)
-        transform = np.dot(distances_3d_inv, deflections)
+
+        #solve T = P^-1 . D
+        transform = np.dot(distances_3d_inv,deflections)
 
         if (True):
+            print "P.T=D"
+            print "T=P-1.D"
             print "####### P matrix ############"
             print distances_3d
-            print "####### P^-1 (left) matrix ############"
+            print "####### P^-1 matrix ############"
             print distances_3d_inv
             print "####### D matrix ############"
-            print deflections
+            print deflections 
             print "####### T matrix ############"
             print transform
         return transform
@@ -347,23 +359,23 @@ if __name__ == "__main__":
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections at 0mm centered: {0}".format(deflections)
 
-    example_xyz = (10.0,10.0,10.0)
+    example_xyz = (20.0,20.0,10.0)
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections for {0} = {1}".format(example_xyz, deflections)
-    example_xyz = (20.0,10.0,10.0)
+    example_xyz = (20.0,20.0,40.0)
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections for {0} = {1}".format(example_xyz, deflections)
-    example_xyz = (10.0,20.0,10.0)
+    example_xyz = (20.0,20.0,80.0)
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections for {0} = {1}".format(example_xyz, deflections)
 
     example_xyz = (10.0,10.0,20.0)
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections for {0} = {1}".format(example_xyz, deflections)
-    example_xyz = (20.0,10.0,20.0)
+    example_xyz = (10.0,10.0,40.0)
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections for {0} = {1}".format(example_xyz, deflections)
-    example_xyz = (10.0,20.0,20.0)
+    example_xyz = (10.0,10.0,80.0)
     deflections = LinTransformer.transform(example_xyz)
     print "Deflections for {0} = {1}".format(example_xyz, deflections)
 
