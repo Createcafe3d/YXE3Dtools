@@ -115,7 +115,6 @@ class LinearAlgebraTransformer(Transformer):
 
     def _add_xy_offsets(self,xyz_list):
         '''Returns (x,y,z) with the centroid offset added to bring deflections between 0-1'''
-        print "add_xy_offsets to: {0}".format(xyz_list)
         result_matrix = []
         for xyz in xyz_list:
             z_height = xyz[2]
@@ -123,7 +122,7 @@ class LinearAlgebraTransformer(Transformer):
             y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
             x_prime = xyz[0]+x_offset
             y_prime = xyz[1]+y_offset
-            result_matrix.append(x_prime,y_prime,z_height)
+            result_matrix.append([x_prime,y_prime,z_height])
         return result_matrix
 
     def _create_transform(self,lower_points,upper_points,upper_height):
@@ -150,13 +149,13 @@ class LinearAlgebraTransformer(Transformer):
         distances_3d_3x3 = self._average_into_3x3(distances_3d)
         distances_3x3 = np.matrix(distances_3d_3x3)
 
-        print distances_3x3
-        distances_3d_inv = np.linalg.pinv(distances_3x3)
+        #distances_3d_inv = np.linalg.pinv(distances_3x3)
+        distances_3d_inv = self._left_inverse(distances_3x3)
+        distances_3d_inv = inv(distances_3x3)
 
         #np's linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
         #distances_3d_inv = inv(distances_3x3)
         #distances_3d_inv = inv(distances_3d)
-        #distances_3d_inv = self._left_inverse(distances_3d)
 
         #Concatenate the height and constant to finish the output side of the array
         #upper_deflections = np.concatenate(((upper_deflections[1], upper_deflections[2]), [(upper_height,0)]*2), axis=1)
@@ -182,7 +181,7 @@ class LinearAlgebraTransformer(Transformer):
         #transform = inv(transform_inv)
 
         #G_matrix = np.dot(distances_3d_inv,deflections_around_zero)
-        G_matrix = np.dot(distances_3d_inv,deflections_3x3)
+        G_matrix = np.dot(distances_3d_inv,deflections_around_zero)
 
         if (True):
             print "C.G=D"
@@ -209,18 +208,9 @@ class LinearAlgebraTransformer(Transformer):
             output_row = row % 3
             totals[output_row] = totals[output_row] + 1
             tmp_matrix[output_row] = tmp_matrix[output_row] + xyz
-        print totals
         for row,xyz in enumerate(tmp_matrix):
             output_matrix[row] = np.divide(tmp_matrix[row],totals[row])
         return output_matrix
-
-    def _get_deflection_centroid(self,matrix):
-        ''' gets the calibration centroid of set of coordinates each in a seperate row as a percent of max '''
-        for coordinate in matrix:
-            pass
-        centroid = (0,0)
-        return centroid
-
 
     def _left_inverse(self,matrix):
         ''' leftInverse(A) = inverse(A_t*A)*A_t
@@ -233,11 +223,10 @@ class LinearAlgebraTransformer(Transformer):
         return left_inverse
 
     def transform(self,xyz_point):
-        xyz_d=(xyz_point[0], xyz_point[1], xyz_point[2])
+        xyz_d=[xyz_point[0], xyz_point[1], xyz_point[2]]
         deflections = np.dot(xyz_point,self._transform)
-        print "input to xy_offsets: {0}".format(deflections[0])
-        print deflections
-        deflections = self._add_xy_offsets(deflections[0])
+        deflection_list = deflections.tolist()
+        deflections = self._add_xy_offsets(deflection_list)
         return deflections
 
 
@@ -289,6 +278,10 @@ class HomogenousTransformer(Transformer):
         lower_points = self._sort_points(lower_points)
         upper_points = self._sort_points(upper_points)
 
+        self._offset_params = {'mx':0,'my':0,'bx':0,'by':0}
+        centroids = self._get_centroids(upper_points, lower_points)
+        self._create_offset_functions(centroids)
+
         deflection_scale = (
             (upper_points[0][0][0] - upper_points[2][0][0]) / (lower_points[0][0][0] - lower_points[2][0][0]),
             (upper_points[0][0][1] - upper_points[2][0][1]) / (lower_points[0][0][1] - lower_points[2][0][1])
@@ -299,6 +292,74 @@ class HomogenousTransformer(Transformer):
 
         self._get_transforms()
         self._cache = {}
+
+    def _remove_xy_offsets(self,xyz_list):
+        '''Returns (x,y,z) with the centroid offset removed to bring deflections between -0.5 to 0.5'''
+        result_matrix = []
+        for xyz in xyz_list:
+            z_height = xyz[2]
+            x_offset = z_height*self._offset_params['mx'] + self._offset_params['bx']
+            y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
+            x_prime = xyz[0]-x_offset
+            y_prime = xyz[1]-y_offset
+            result_matrix.append((x_prime,y_prime,z_height))
+        return result_matrix
+
+    def _add_xy_offsets(self,xyz_list):
+        '''Returns (x,y,z) with the centroid offset added to bring deflections between 0-1'''
+        result_matrix = []
+        for xyz in xyz_list:
+            z_height = xyz[2]
+            x_offset = z_height*self._offset_params['mx'] + self._offset_params['bx']
+            y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
+            x_prime = xyz[0]+x_offset
+            y_prime = xyz[1]+y_offset
+            result_matrix.append([x_prime,y_prime,z_height])
+        return result_matrix
+
+    def _get_centroids(self, upper_points, lower_points):
+        '''Take set of points in [((x,y)...(x,y)), ... ] and return [(x,y),(...)] centroid list
+            - This may also just be the det(points_matrix) '''
+        (upper_deflections, upper_cartesian) = zip(*upper_points)
+        (lower_deflections, lower_cartesian) = zip(*lower_points)
+        points = [upper_deflections,lower_deflections]
+        centroids=[]
+        for pointset in points:
+            x = 0
+            y = 0
+            for (i, xyz) in enumerate(pointset):
+                x=x+xyz[0]
+                y=y+xyz[1]
+            total=i+1
+            centroids.append((x/total,y/total))
+        return centroids
+
+    def _create_offset_functions(self, centroids):
+        '''Takes the matrix of (upper;lower) centroids and creates the offset transform
+           to satisfy the offset part of calibration
+           
+           This creates the ol y=mx+b but it derives dx=m*z+b'''
+
+        top_centroid = centroids[0]
+        bottom_centroid = centroids[1]
+        top_x = top_centroid[0]
+        top_y = top_centroid[1]
+        top_z = top_centroid[2]
+        bottom_x = bottom_centroid[0]
+        bottom_y = bottom_centroid[1]
+        bottom_z = bottom_centroid[2]
+
+        mx = (top_x - bottom_x)/(top_z - bottom_z)
+        my = (top_y - bottom_y)/(top_z - bottom_z)
+        bx = top_x - bottom_x*mx
+        by = top_y - bottom_y*my
+
+        self._offset_params['mx']=mx
+        self._offset_params['my']=my
+        self._offset_params['bx']=bx
+        self._offset_params['by']=by
+
+        return
 
     def _scale_point(self, point, scale):
         x, y = point
@@ -394,6 +455,7 @@ class HomogenousTransformer(Transformer):
             logger.warning("Bounds of printer exceeded: %s,%s" % (x, y))
             adjusted_x = min(1.0, max(0.0, x1))
             adjusted_y = min(1.0, max(0.0, y1))
+            #re-add offsets
             return(adjusted_x, adjusted_y)
 
     def set_scale(self, new_scale):
@@ -439,42 +501,47 @@ if __name__ == "__main__":
     #
     example_xyz = (0.0,0.0,0.0)
 
-    print "LinTransformerMade"
-    LinTransformer=LinearAlgebraTransformer(height ,lower_points_real ,upper_points_real)
-    #LinTransformer=LinearAlgebraTransformer(height ,lower_points, upper_points)
-    deflections = LinTransformer.transform(example_xyz)
-    print "Deflections at 0mm centered: {0}".format(deflections)
-
-    example_xyz = (20.0,20.0,10.0)
-    deflections = LinTransformer.transform(example_xyz)
-    print "Deflections for {0} = {1}".format(example_xyz, deflections)
-    example_xyz = (-20.0,-20.0,10.0)
-    deflections = LinTransformer.transform(example_xyz)
-    print "Deflections for {0} = {1}".format(example_xyz, deflections)
-    example_xyz = (-20.0,-20.0,50.0)
-    deflections = LinTransformer.transform(example_xyz)
-    print "Deflections for {0} = {1}".format(example_xyz, deflections)
-
-    example_xyz = (10.0,10.0,20.0)
-    deflections = LinTransformer.transform(example_xyz)
-    print "Deflections for {0} = {1}".format(example_xyz, deflections)
-    example_xyz = (10.0,10.0,40.0)
-    deflections = LinTransformer.transform(example_xyz)
-    print "Deflections for {0} = {1}".format(example_xyz, deflections)
-    example_xyz = (10.0,10.0,80.0)
-    deflections = LinTransformer.transform(example_xyz)
-    print "Deflections for {0} = {1}".format(example_xyz, deflections)
-
-    example_xyz = (0.0,0.0,50.0)
-    deflections = LinTransformer.transform(example_xyz)
-    print "Deflections after 50mm centered: {0}".format(deflections)
-
-    import time
-    now=time.time()
-    iterations=100000
-    for i in range(1,iterations):
+    scale = 1
+    HomoTransformer = HomogenousTransformer(scale, height, lower_points_real, upper_points_real)
+    if (False):
+        print "LinTransformerMade"
+        LinTransformer=LinearAlgebraTransformer(height ,lower_points_real ,upper_points_real)
+        #LinTransformer=LinearAlgebraTransformer(height ,lower_points, upper_points)
+        print "Input to transform function: {0}".format(example_xyz)
         deflections = LinTransformer.transform(example_xyz)
-    after=time.time()
-    print "{0} iterations of transform took {1} seconds".format(iterations,after-now)
+        print "Deflections at 0mm centered: {0}".format(deflections)
+
+        example_xyz = (20.0,20.0,10.0)
+        print example_xyz
+        deflections = LinTransformer.transform(example_xyz)
+        print "Deflections for {0} = {1}".format(example_xyz, deflections)
+        example_xyz = (-20.0,-20.0,10.0)
+        deflections = LinTransformer.transform(example_xyz)
+        print "Deflections for {0} = {1}".format(example_xyz, deflections)
+        example_xyz = (-20.0,-20.0,50.0)
+        deflections = LinTransformer.transform(example_xyz)
+        print "Deflections for {0} = {1}".format(example_xyz, deflections)
+
+        example_xyz = (10.0,10.0,20.0)
+        deflections = LinTransformer.transform(example_xyz)
+        print "Deflections for {0} = {1}".format(example_xyz, deflections)
+        example_xyz = (10.0,10.0,40.0)
+        deflections = LinTransformer.transform(example_xyz)
+        print "Deflections for {0} = {1}".format(example_xyz, deflections)
+        example_xyz = (10.0,10.0,80.0)
+        deflections = LinTransformer.transform(example_xyz)
+        print "Deflections for {0} = {1}".format(example_xyz, deflections)
+
+        example_xyz = (0.0,0.0,50.0)
+        deflections = LinTransformer.transform(example_xyz)
+        print "Deflections after 50mm centered: {0}".format(deflections)
+
+        import time
+        now=time.time()
+        iterations=100000
+        for i in range(1,iterations):
+            deflections = LinTransformer.transform(example_xyz)
+        after=time.time()
+        print "{0} iterations of transform took {1} seconds".format(iterations,after-now)
 
     
