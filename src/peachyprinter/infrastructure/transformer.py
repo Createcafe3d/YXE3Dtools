@@ -279,9 +279,18 @@ class HomogenousTransformer(Transformer):
         upper_points = self._sort_points(upper_points)
 
         self._offset_params = {'mx':0,'my':0,'bx':0,'by':0}
-        centroids = self._get_centroids(upper_points, lower_points)
-        self._create_offset_functions(centroids)
+        (upper_deflections, upper_cartesian) = zip(*upper_points)
+        (lower_deflections, lower_cartesian) = zip(*lower_points)
 
+        centroids = self._get_centroids(upper_deflections, lower_deflections)
+        self._create_offset_functions(centroids, upper_height)
+
+        upper_deflections = self._remove_xy_offsets(upper_deflections, upper_height)
+        lower_deflections = self._remove_xy_offsets(lower_deflections, 0)
+        upper_points = zip(upper_deflections, upper_cartesian)
+        lower_points = zip(lower_deflections, lower_cartesian)
+
+        #take [opposite points][Deflections][x or y] as each of the options
         deflection_scale = (
             (upper_points[0][0][0] - upper_points[2][0][0]) / (lower_points[0][0][0] - lower_points[2][0][0]),
             (upper_points[0][0][1] - upper_points[2][0][1]) / (lower_points[0][0][1] - lower_points[2][0][1])
@@ -293,35 +302,29 @@ class HomogenousTransformer(Transformer):
         self._get_transforms()
         self._cache = {}
 
-    def _remove_xy_offsets(self,xyz_list):
+    def _remove_xy_offsets(self,xy_list, z_height):
         '''Returns (x,y,z) with the centroid offset removed to bring deflections between -0.5 to 0.5'''
         result_matrix = []
-        for xyz in xyz_list:
-            z_height = xyz[2]
+        for xy in xy_list:
             x_offset = z_height*self._offset_params['mx'] + self._offset_params['bx']
             y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
-            x_prime = xyz[0]-x_offset
-            y_prime = xyz[1]-y_offset
-            result_matrix.append((x_prime,y_prime,z_height))
+            x_prime = xy[0]-x_offset
+            y_prime = xy[1]-y_offset
+            result_matrix.append((x_prime,y_prime))
         return result_matrix
 
-    def _add_xy_offsets(self,xyz_list):
+    def _add_xy_offset(self,xyz):
         '''Returns (x,y,z) with the centroid offset added to bring deflections between 0-1'''
-        result_matrix = []
-        for xyz in xyz_list:
-            z_height = xyz[2]
-            x_offset = z_height*self._offset_params['mx'] + self._offset_params['bx']
-            y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
-            x_prime = xyz[0]+x_offset
-            y_prime = xyz[1]+y_offset
-            result_matrix.append([x_prime,y_prime,z_height])
-        return result_matrix
+        z_height = xyz[2]
+        x_offset = z_height*self._offset_params['mx'] + self._offset_params['bx']
+        y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
+        x_prime = xyz[0]+x_offset
+        y_prime = xyz[1]+y_offset
+        return (x_prime,y_prime,z_height)
 
-    def _get_centroids(self, upper_points, lower_points):
+    def _get_centroids(self, upper_deflections, lower_deflections):
         '''Take set of points in [((x,y)...(x,y)), ... ] and return [(x,y),(...)] centroid list
             - This may also just be the det(points_matrix) '''
-        (upper_deflections, upper_cartesian) = zip(*upper_points)
-        (lower_deflections, lower_cartesian) = zip(*lower_points)
         points = [upper_deflections,lower_deflections]
         centroids=[]
         for pointset in points:
@@ -334,7 +337,7 @@ class HomogenousTransformer(Transformer):
             centroids.append((x/total,y/total))
         return centroids
 
-    def _create_offset_functions(self, centroids):
+    def _create_offset_functions(self, centroids, height):
         '''Takes the matrix of (upper;lower) centroids and creates the offset transform
            to satisfy the offset part of calibration
            
@@ -344,10 +347,10 @@ class HomogenousTransformer(Transformer):
         bottom_centroid = centroids[1]
         top_x = top_centroid[0]
         top_y = top_centroid[1]
-        top_z = top_centroid[2]
+        top_z = height
         bottom_x = bottom_centroid[0]
         bottom_y = bottom_centroid[1]
-        bottom_z = bottom_centroid[2]
+        bottom_z = 0
 
         mx = (top_x - bottom_x)/(top_z - bottom_z)
         my = (top_y - bottom_y)/(top_z - bottom_z)
@@ -363,13 +366,9 @@ class HomogenousTransformer(Transformer):
 
     def _scale_point(self, point, scale):
         x, y = point
-        dx = x * 2.0 - 1.0
-        dy = y * 2.0 - 1.0
-        rx = dx * scale[0]
-        ry = dy * scale[1]
-        tx = (rx + 1.0) / 2.0
-        ty = (ry + 1.0) / 2.0
-        return (tx, ty)
+        sx = x * scale[0]
+        sy = y * scale[1]
+        return (sx, sy)
 
     def _sort_points(self, points):
         distances = [distance for (deflection, distance) in points.items()]
@@ -449,14 +448,15 @@ class HomogenousTransformer(Transformer):
         finally:
             self._lock.release()
         x1, y1 = (kx/k, ky/k)
-        if x1 >= 0.0 and x1 <= 1.0 and y1 >= 0.0 and y1 <= 1.0:
-            return (x1, y1)
+        (x2, y2) = self._add_xy_offsets((x1, y1, z))
+        if x2 >= 0.0 and x2 <= 1.0 and y2 >= 0.0 and y2 <= 1.0:
+            return (x2, y2)
         else:
             logger.warning("Bounds of printer exceeded: %s,%s" % (x, y))
             adjusted_x = min(1.0, max(0.0, x1))
             adjusted_y = min(1.0, max(0.0, y1))
             #re-add offsets
-            return(adjusted_x, adjusted_y)
+            return(adjusted_translated_x, adjusted_translated_y)
 
     def set_scale(self, new_scale):
         self._scale = new_scale
