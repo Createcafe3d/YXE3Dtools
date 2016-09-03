@@ -115,6 +115,7 @@ class LinearAlgebraTransformer(Transformer):
 
     def _add_xy_offsets(self,xyz_list):
         '''Returns (x,y,z) with the centroid offset added to bring deflections between 0-1'''
+        print "add_xy_offsets to: {0}".format(xyz_list)
         result_matrix = []
         for xyz in xyz_list:
             z_height = xyz[2]
@@ -122,7 +123,7 @@ class LinearAlgebraTransformer(Transformer):
             y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
             x_prime = xyz[0]+x_offset
             y_prime = xyz[1]+y_offset
-            result_matrix.append((x_prime,y_prime,z_height))
+            result_matrix.append(x_prime,y_prime,z_height)
         return result_matrix
 
     def _create_transform(self,lower_points,upper_points,upper_height):
@@ -146,12 +147,15 @@ class LinearAlgebraTransformer(Transformer):
         upper_3d_distances = np.concatenate((upper_distances, [(upper_height,)]*4), axis=1)
         lower_3d_distances = np.concatenate((lower_distances, [(lower_height,)]*4), axis=1)
         distances_3d = np.concatenate((upper_3d_distances, lower_3d_distances), axis=0)
+        distances_3d_3x3 = self._average_into_3x3(distances_3d)
+        distances_3x3 = np.matrix(distances_3d_3x3)
 
-        distances_3d_inv = self._left_inverse(distances_3d)
+        print distances_3x3
+        distances_3d_inv = np.linalg.pinv(distances_3x3)
 
         #np's linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
+        #distances_3d_inv = inv(distances_3x3)
         #distances_3d_inv = inv(distances_3d)
-        #distances_3d_inv = np.linalg.pinv(distances_3d)
         #distances_3d_inv = self._left_inverse(distances_3d)
 
         #Concatenate the height and constant to finish the output side of the array
@@ -166,12 +170,19 @@ class LinearAlgebraTransformer(Transformer):
         centroids = self._get_centroids((upper_3d_deflections, lower_3d_deflections))
         self._create_offset_functions(centroids) #Creates self._offset(deflections) used in transform
         deflections = np.concatenate((upper_3d_deflections, lower_3d_deflections), axis=0)
-        deflections_around_zero = self._remove_xy_offsets(deflections)
+
+        deflections_3x3 = self._average_into_3x3(deflections)
+        print np.matrix(deflections_3x3)
+        deflections_around_zero = self._remove_xy_offsets(deflections_3x3)
+
+        #NOW AVERAGE THAT SHIT INTO 3x3 MATRICIES
 
         #solve T =  P^-1 . D 
         #transform_inv = np.dot(deflections_inv, distances_3d)
         #transform = inv(transform_inv)
-        G_matrix = np.dot(distances_3d_inv,deflections_around_zero)
+
+        #G_matrix = np.dot(distances_3d_inv,deflections_around_zero)
+        G_matrix = np.dot(distances_3d_inv,deflections_3x3)
 
         if (True):
             print "C.G=D"
@@ -187,6 +198,21 @@ class LinearAlgebraTransformer(Transformer):
             print "####### G matrix ############"
             print G_matrix 
         return G_matrix
+
+    def _average_into_3x3(self,matrix):
+        '''Take any length of (x,y,z) matrix and average it into a 3x3'''
+        xyz = (0,0,0)
+        totals = [0,0,0]
+        tmp_matrix = [xyz,xyz,xyz]
+        output_matrix = tmp_matrix
+        for row,xyz in enumerate(matrix):
+            output_row = row % 3
+            totals[output_row] = totals[output_row] + 1
+            tmp_matrix[output_row] = tmp_matrix[output_row] + xyz
+        print totals
+        for row,xyz in enumerate(tmp_matrix):
+            output_matrix[row] = np.divide(tmp_matrix[row],totals[row])
+        return output_matrix
 
     def _get_deflection_centroid(self,matrix):
         ''' gets the calibration centroid of set of coordinates each in a seperate row as a percent of max '''
@@ -208,8 +234,10 @@ class LinearAlgebraTransformer(Transformer):
 
     def transform(self,xyz_point):
         xyz_d=(xyz_point[0], xyz_point[1], xyz_point[2])
-        deflections = np.dot(xyz_d,self._transform)
-        deflections = self._add_xy_offsets([deflections])
+        deflections = np.dot(xyz_point,self._transform)
+        print "input to xy_offsets: {0}".format(deflections[0])
+        print deflections
+        deflections = self._add_xy_offsets(deflections[0])
         return deflections
 
 
