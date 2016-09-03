@@ -320,7 +320,7 @@ class HomogenousTransformer(Transformer):
         y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
         x_prime = xyz[0]+x_offset
         y_prime = xyz[1]+y_offset
-        return (x_prime,y_prime,z_height)
+        return (x_prime,y_prime)
 
     def _get_centroids(self, upper_deflections, lower_deflections):
         '''Take set of points in [((x,y)...(x,y)), ... ] and return [(x,y),(...)] centroid list
@@ -448,7 +448,7 @@ class HomogenousTransformer(Transformer):
         finally:
             self._lock.release()
         x1, y1 = (kx/k, ky/k)
-        (x2, y2) = self._add_xy_offsets((x1, y1, z))
+        (x2, y2) = self._add_xy_offset((x1, y1, z))
         if x2 >= 0.0 and x2 <= 1.0 and y2 >= 0.0 and y2 <= 1.0:
             return (x2, y2)
         else:
