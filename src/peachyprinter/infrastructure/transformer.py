@@ -16,33 +16,35 @@ class LinearAlgebraTransformer(Transformer):
             This class creates a linear transform matrix that you can transform any size of inputs into.
             
             This transform works by creating a linear transform matrix
-            from the matrix P (Positions from calibration) of size n=8:
-            [x0 y0 z0 0]
-            [x1 y1 z1 0] = P
-            [   ....   ]
-            [xn yn zn 1]
+            from the matrix C (cartesian coordinates from calibration) of size n=8:
+            [x0 y0 z0]
+            [x1 y1 z1] = C
+            [  ....  ]
+            [xn yn zn]
 
             And the matched matrix D (Deflections as a percentage of "max")
-            [dx0 dy0 z0 0]
-            [dx1 dy1 z1 0] = D
-            [    ....    ]
-            [dxn dyn zn 1]
+            [dx0 dy0]
+            [dx1 dy1] = D
+            [  ...  ]
+            [dxn dyn]
 
-            To solve the linear transforms to solve for the "Transform" matrix T:
-            P.T=D
-            with the sizes of: [4x4].[4x4]=[4x4]
+            Z matrix used in offseting laser position
+            [z0 1]
+            [z1 1] = Z
+            [ .. ]
+            [zn 1]            
+
+            To solve the linear transforms to solve for the "Transform" matrix G
+            D = C.G + Z.M
+            -where the M matrix is derived from the centroids of top and bottom cartesian.
 
             *NOTE: due to matrix magics, you can't just do a simple inverse
             * to solve the magic matrix equation of T=(P_left^-1).D
             *
-            * So we take the left inverse, and I chose this cause it made the dimenisons work.
-            *  - That's literally the only reason
-            *  - The pseudo inverse in numpy seems to work too, so that's a nice bi-directional solution
+            * So we take the left inverse, this gives us the correct dimensions
+            *  - the moore-penrose approach seems to be working?
+            *  - The pseudo inverse in numpy seems to work too.
             * 
-            * Given a matrix A of size [5x3]
-            * Left inverse solves the equation of (A-1).A = I  [3x3]
-            * Right inverse solves the equation of A.(A-1) = I [5x5]
-            * See the difference in sizes, that's important to making the math work.
             *** leftInverse(A) = inverse(A_t*A)*A_t
 
             Use the function deflections=transform(np.array([(x,y,z),(xn,yn,zn)])) to use the magic
@@ -54,79 +56,72 @@ class LinearAlgebraTransformer(Transformer):
         self._upper_height = upper_height
         self._lower_points = lower_points
         self._upper_points = upper_points
-        self._offset_params = {'mx':0,'my':0,'bx':0,'by':0}
         self._transform = self._create_transform(lower_points,upper_points,upper_height)
-        self._cache = {}
-
-    def _get_centroids(self, points):
-        '''Take set of points in [((x,y)...(x,y)), ... ] and return [(x,y),(...)] centroid list
-            - This may also just be the det(points_matrix) '''
-        centroids=[]
-        for pointset in points:
-            x = 0
-            y = 0
-            z = 0
-            for (i, xyz) in enumerate(pointset):
-                x=x+xyz[0]
-                y=y+xyz[1]
-                z=z+xyz[2]
-            total=i+1
-            centroids.append((x/total,y/total,z/total))
-        return centroids
-
-    def _create_offset_functions(self, centroids):
-        '''Takes the matrix of (upper;lower) centroids and creates the offset transform
-           to satisfy the offset part of calibration
-           
-           This creates the ol y=mx+b but it derives dx=m*z+b'''
-
-        top_centroid = centroids[0]
-        bottom_centroid = centroids[1]
-        top_x = top_centroid[0]
-        top_y = top_centroid[1]
-        top_z = top_centroid[2]
-        bottom_x = bottom_centroid[0]
-        bottom_y = bottom_centroid[1]
-        bottom_z = bottom_centroid[2]
-
-        mx = (top_x - bottom_x)/(top_z - bottom_z)
-        my = (top_y - bottom_y)/(top_z - bottom_z)
-        bx = top_x - bottom_x*mx
-        by = top_y - bottom_y*my
-
-        self._offset_params['mx']=mx
-        self._offset_params['my']=my
-        self._offset_params['bx']=bx
-        self._offset_params['by']=by
-
-        return
-
-    def _remove_xy_offsets(self,xyz_list):
-        '''Returns (x,y,z) with the centroid offset removed to bring deflections between -0.5 to 0.5'''
-        result_matrix = []
-        for xyz in xyz_list:
-            z_height = xyz[2]
-            x_offset = z_height*self._offset_params['mx'] + self._offset_params['bx']
-            y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
-            x_prime = xyz[0]-x_offset
-            y_prime = xyz[1]-y_offset
-            result_matrix.append((x_prime,y_prime,z_height))
-        return result_matrix
-
-    def _add_xy_offsets(self,xyz_list):
-        '''Returns (x,y,z) with the centroid offset added to bring deflections between 0-1'''
-        result_matrix = []
-        for xyz in xyz_list:
-            z_height = xyz[2]
-            x_offset = z_height*self._offset_params['mx'] + self._offset_params['bx']
-            y_offset = z_height*self._offset_params['my'] + self._offset_params['by']
-            x_prime = xyz[0]+x_offset
-            y_prime = xyz[1]+y_offset
-            result_matrix.append([x_prime,y_prime,z_height])
-        return result_matrix
 
     def _create_transform(self,lower_points,upper_points,upper_height):
-        '''Creates self._transform, you feed it xyz and defliections - this creates the linear transform matrix for use in self.transform()'''
+        '''Creates self._transform, self._cartesian_offsets, and self._deflection_offsets '''
+
+        deflection_averages=[0,0,0]
+        deflection_matrix = []
+        deflection_normalized_matrix = []
+        cartesian_averages=[0,0,0]
+        cartesian_matrix = []
+        cartesian_normalized_matrix = []
+        lower_height = 0.0
+        num_points = 8.0
+
+        for (deflections, distances) in upper_points.items():
+            deflection_averages[0] += deflections[0]/num_points
+            deflection_averages[1] += deflections[1]/num_points
+            deflection_averages[2] += upper_height/num_points
+            deflection_matrix.append([deflections[0], deflections[1], upper_height])
+            cartesian_averages[0] += distances[0]/num_points
+            cartesian_averages[1] += distances[1]/num_points
+            cartesian_averages[2] += upper_height/num_points
+            cartesian_matrix.append([distances[0], distances[1], upper_height])
+
+        for (deflections, distances) in lower_points.items():
+            deflection_averages[0] += deflections[0]/num_points
+            deflection_averages[1] += deflections[1]/num_points
+            deflection_averages[2] += lower_height/num_points
+            deflection_matrix.append([deflections[0], deflections[1], lower_height])
+            cartesian_averages[0] += distances[0]/num_points
+            cartesian_averages[1] += distances[1]/num_points
+            cartesian_averages[2] += lower_height/num_points
+            cartesian_matrix.append([distances[0], distances[1], lower_height])
+
+        deflection_offset_matrix = np.matrix([(deflection_averages[0], deflection_averages[1], deflection_averages[2])]*8)
+        cartesian_offset_matrix = np.matrix([(cartesian_averages[0], cartesian_averages[1], cartesian_averages[2])]*8)
+
+        deflection_normalized_matrix = deflection_matrix - deflection_offset_matrix
+        cartesian_normalized_matrix = cartesian_matrix - cartesian_offset_matrix
+
+        deflections_squared = np.square(deflection_normalized_matrix)
+        cartesians_squared = np.square(cartesian_normalized_matrix)
+
+        cartesian_vandermonde = np.concatenate((cartesian_normalized_matrix, cartesians_squared), axis=1)
+        cartesian_vandermonde = np.concatenate((cartesian_vandermonde, [(1,)]*8), axis=1)
+        deflection_vandermonde = np.concatenate((deflection_normalized_matrix, deflections_squared), axis=1)
+        deflection_vandermonde = np.concatenate((deflection_vandermonde, [(1,)]*8), axis=1)
+
+        print cartesian_vandermonde
+        cartesian_vandermonde = np.delete(cartesian_vandermonde,7,0)
+        #cartesian_vandermonde = np.delete(cartesian_vandermonde,3,0)
+        deflection_vandermonde = np.delete(deflection_vandermonde,7,0)
+        #deflection_vandermonde = np.delete(deflection_vandermonde,3,0)
+        print "7x7 CARTESIAN????"
+        print cartesian_vandermonde
+
+        cartesian_vandermonde_inv = self._left_inverse(cartesian_vandermonde)
+        #cartesian_vandermonde_inv = inv(cartesian_vandermonde)
+        transform_matrix = np.dot(cartesian_vandermonde_inv, deflection_vandermonde)
+
+        print "TRANSFORM MATRIX!!!! SQUEEEEEE"
+        print transform_matrix
+
+
+
+
 
         upper_distances = [distance for (deflection, distance) in upper_points.items()]
         upper_deflections = [deflection for (deflection, distance) in upper_points.items()]
@@ -134,83 +129,129 @@ class LinearAlgebraTransformer(Transformer):
         lower_deflections = [deflection for (deflection, distance) in lower_points.items()]
         lower_height = 0
 
-        #List of Tupples, Tupples contain each row, [colum_index][row_index]
-        #[(0,)]*4 means 4 rows of 1 index each 4X1 matrix
-        #[(1,1),(2,2)] is an array 2X2 with 1's on top and 2's on the bottom 
-        #np.concatenate axis=1 is colum concatenate, axis=0 is concatenating a new row
 
-        #Bring it all together into 4x4 arrays
-        #upper_3d_distances = np.concatenate(((upper_distances[1],upper_distances[2]), [(upper_height,0)]*2), axis=1)
-        #lower_3d_distances = np.concatenate(((lower_distances[0],lower_distances[3]), [(0,0),(0,1)]), axis=1)
-        #upper_3d_distances = np.concatenate((upper_distances[0], [(upper_height,0)]), axis=1) #(x,y,z,0)
+        #np.concatenate axis=1 is colum concatenate, axis=0 is concatenating a new row
+        #Bring it all together into 8x3 matricies
         upper_3d_distances = np.concatenate((upper_distances, [(upper_height,)]*4), axis=1)
         lower_3d_distances = np.concatenate((lower_distances, [(lower_height,)]*4), axis=1)
         distances_3d = np.concatenate((upper_3d_distances, lower_3d_distances), axis=0)
-        distances_3d_3x3 = self._average_into_3x3(distances_3d)
-        distances_3x3 = np.matrix(distances_3d_3x3)
 
-        #distances_3d_inv = np.linalg.pinv(distances_3x3)
-        distances_3d_inv = self._left_inverse(distances_3x3)
-        distances_3d_inv = inv(distances_3x3)
-
-        #np's linalg's pseudo inverse does the same as left inverse but by solving the problem of least squares (or something)
-        #distances_3d_inv = inv(distances_3x3)
-        #distances_3d_inv = inv(distances_3d)
-
-        #Concatenate the height and constant to finish the output side of the array
-        #upper_deflections = np.concatenate(((upper_deflections[1], upper_deflections[2]), [(upper_height,0)]*2), axis=1)
-        #lower_deflections = np.concatenate(((lower_deflections[0], lower_deflections[3]), [(0,0), (0,1)]), axis=1)
+        #concatenate the height and constant to finish the output side of the array
         upper_3d_deflections= np.concatenate((upper_deflections, [(upper_height,)]*4), axis=1)
         lower_3d_deflections= np.concatenate((lower_deflections, [(lower_height,)]*4), axis=1)
-        #upper_deflections= [(upper_deflections[0][0], upper_deflections[0][1], upper_height)]
-        #lower_deflections = np.concatenate(((lower_deflections[0],lower_deflections[2]), [(lower_height,)]*2), axis=1)
+        deflections_3d = np.concatenate((upper_3d_deflections, lower_3d_deflections), axis=0)
 
         #Try offsets before and after, so transforms are around 0
-        centroids = self._get_centroids((upper_3d_deflections, lower_3d_deflections))
-        self._create_offset_functions(centroids) #Creates self._offset(deflections) used in transform
-        deflections = np.concatenate((upper_3d_deflections, lower_3d_deflections), axis=0)
-
-        deflections_3x3 = self._average_into_3x3(deflections)
-        print np.matrix(deflections_3x3)
-        deflections_around_zero = self._remove_xy_offsets(deflections_3x3)
-
-        #NOW AVERAGE THAT SHIT INTO 3x3 MATRICIES
-
-        #solve T =  P^-1 . D 
-        #transform_inv = np.dot(deflections_inv, distances_3d)
-        #transform = inv(transform_inv)
-
-        #G_matrix = np.dot(distances_3d_inv,deflections_around_zero)
-        G_matrix = np.dot(distances_3d_inv,deflections_around_zero)
-
-        if (True):
-            print "C.G=D"
-            print "G = left_inv(C) . D"
-            print "####### C matrix ############"
-            print distances_3d
-            print "####### C^-1 matrix ############"
-            print distances_3d_inv
-            print "####### D matrix ############"
-            print deflections 
-            print "####### Zerod D matrix ############"
-            print deflections_around_zero
-            print "####### G matrix ############"
-            print G_matrix 
+        G_matrix = self._create_calibration_matricies(deflections_3d, distances_3d)
+        self._transform = G_matrix
         return G_matrix
 
-    def _average_into_3x3(self,matrix):
-        '''Take any length of (x,y,z) matrix and average it into a 3x3'''
-        xyz = (0,0,0)
-        totals = [0,0,0]
-        tmp_matrix = [xyz,xyz,xyz]
-        output_matrix = tmp_matrix
-        for row,xyz in enumerate(matrix):
-            output_row = row % 3
-            totals[output_row] = totals[output_row] + 1
-            tmp_matrix[output_row] = tmp_matrix[output_row] + xyz
-        for row,xyz in enumerate(tmp_matrix):
-            output_matrix[row] = np.divide(tmp_matrix[row],totals[row])
-        return output_matrix
+    def _get_xyz_centroids(self, input_matrix):
+        '''Take set of points in [(dx,dy,z), (dx,dy,z), (...)]
+            returns matrix [x_max_centroid, y_max_centroid, z_max_centroid, avg, x_min_centroid, y_min_centroid, z_min_centroid]
+            where each centroid contains (x,y,z)'''
+        centroids=[]
+        x_cnt = 0
+        y_cnt = 0
+        z_cnt = 0
+
+        for (i,xyz) in enumerate(input_matrix):
+            x_cnt = x_cnt + xyz[0]
+            y_cnt = y_cnt + xyz[1]
+            z_cnt = z_cnt + xyz[2]
+
+        rows = i+1
+        x_avg = x_cnt/rows
+        y_avg = y_cnt/rows
+        z_avg = z_cnt/rows
+        avg = [x_avg, y_avg, z_avg]
+        x_max = [0,0,0]
+        y_max = [0,0,0]
+        z_max = [0,0,0]
+        x_min = [0,0,0]
+        y_min = [0,0,0]
+        z_min = [0,0,0]
+
+        for xyz in input_matrix:
+            if xyz[0] > avg[0]:
+                x_max[0] += (xyz[0] - x_avg)/4
+                x_max[1] += (xyz[1] - y_avg)/4
+                x_max[2] += (xyz[2] - z_avg)/4
+            else:                  
+                x_min[0] += (xyz[0] - x_avg)/4
+                x_min[1] += (xyz[1] - y_avg)/4
+                x_min[2] += (xyz[2] - z_avg)/4
+            if xyz[1] > avg[1]:    
+                y_max[0] += (xyz[0] - x_avg)/4
+                y_max[1] += (xyz[1] - y_avg)/4
+                y_max[2] += (xyz[2] - z_avg)/4
+            else:                  
+                y_min[0] += (xyz[0] - x_avg)/4
+                y_min[1] += (xyz[1] - y_avg)/4
+                y_min[2] += (xyz[2] - z_avg)/4
+            if xyz[2] > avg[2]:    
+                z_max[0] += (xyz[0] - x_avg)/4
+                z_max[1] += (xyz[1] - y_avg)/4
+                z_max[2] += (xyz[2] - z_avg)/4
+            else:                  
+                z_min[0] += (xyz[0] - x_avg)/4
+                z_min[1] += (xyz[1] - y_avg)/4
+                z_min[2] += (xyz[2] - z_avg)/4
+        centroids=[x_max, x_min, y_max, y_min, z_max, z_min, avg]
+        return centroids
+
+    def _create_calibration_matricies(self, deflection_matrix, cartesian_matrix):
+
+        #Get the centroids from the vertex points, and remove any offsets
+        deflection_centroids = self._get_xyz_centroids(deflection_matrix)
+        [xd_max, xd_min, yd_max, yd_min, zd_max, zd_min, d_avg] = deflection_centroids
+        cartesian_centroids = self._get_xyz_centroids(cartesian_matrix)
+        [x_max, x_min, y_max, y_min, z_max, z_min, avg] = cartesian_centroids
+
+        x = 0
+        y = 1
+        z = 2
+
+        # cheating a bit, the 0 offset is given in average of all centroids
+        d_bx = d_avg[x]
+        d_by = d_avg[y]
+        d_bz = d_avg[z]
+        bx = avg[x]
+        by = avg[y]
+        bz = avg[z]
+
+        self._deflection_offsets = np.matrix([(d_bx, d_by, d_bz)])
+        self._cartesian_offsets = np.matrix([(bx, by, bz)])
+
+        #Create the Vandermonde matrix with the centroids:
+        vandermonde_c_matrix = [(x_max[0], x_max[1], x_max[2], x_max[0]**2, x_max[1]**2, x_max[2]**2, 1),
+                               (x_min[0], x_min[1], x_min[2], x_min[0]**2, x_min[1]**2, x_min[2]**2, 1),
+                               (y_max[0], y_max[1], y_max[2], y_max[0]**2, y_max[1]**2, y_max[2]**2, 1),
+                               (y_min[0], y_min[1], y_min[2], y_min[0]**2, y_min[1]**2, y_min[2]**2, 1),
+                               (z_max[0], z_max[1], z_max[2], z_max[0]**2, z_max[1]**2, z_max[2]**2, 1),
+                               (z_min[0], z_min[1], z_min[2], z_min[0]**2, z_min[1]**2, z_min[2]**2, 1),
+                               (0, 0, 0, 0, 0, 0, 1)]
+
+        vandermonde_d_matrix = [(xd_max[0], xd_max[1], xd_max[2], xd_max[0]**2, xd_max[1]**2, xd_max[2]**2, 1),
+                               (xd_min[0], xd_min[1], xd_min[2], xd_min[0]**2, xd_min[1]**2, xd_min[2]**2, 1),
+                               (yd_max[0], yd_max[1], yd_max[2], yd_max[0]**2, yd_max[1]**2, yd_max[2]**2, 1),
+                               (yd_min[0], yd_min[1], yd_min[2], yd_min[0]**2, yd_min[1]**2, yd_min[2]**2, 1),
+                               (zd_max[0], zd_max[1], zd_max[2], zd_max[0]**2, zd_max[1]**2, zd_max[2]**2, 1),
+                               (zd_min[0], zd_min[1], zd_min[2], zd_min[0]**2, zd_min[1]**2, zd_min[2]**2, 1),
+                               (0, 0, 0, 0, 0, 0, 1)]
+
+        c_matrix_inv = self._left_inverse(vandermonde_c_matrix)
+        vandermonde_t_matrix = np.dot(c_matrix_inv, vandermonde_d_matrix)
+
+        #print "Vander C Matrix:"
+        #print np.matrix(vandermonde_c_matrix)
+        #print "Vander D Matrix:"
+        #print np.matrix(vandermonde_d_matrix)
+        print "VANDERMONDE MATRIX:"
+        print vandermonde_t_matrix
+
+        return vandermonde_t_matrix
+
 
     def _left_inverse(self,matrix):
         ''' leftInverse(A) = inverse(A_t*A)*A_t
@@ -222,11 +263,13 @@ class LinearAlgebraTransformer(Transformer):
         left_inverse = np.dot(inverse_helper,transposed_matrix)
         return left_inverse
 
-    def transform(self,xyz_point):
-        xyz_d=[xyz_point[0], xyz_point[1], xyz_point[2]]
-        deflections = np.dot(xyz_point,self._transform)
-        deflection_list = deflections.tolist()
-        deflections = self._add_xy_offsets(deflection_list)
+    def transform(self,xyz_cartesian):
+        '''THE transform function, provide (x,y,z) and you'll get (xd, yd, z)'''
+        xyz_point = (np.matrix([xyz_cartesian]) - self._cartesian_offsets).tolist()
+        xyz_v=[(xyz_point[0][0], xyz_point[0][1], xyz_point[0][2], xyz_point[0][0]**2, xyz_point[0][1]**2, xyz_point[0][2]**2, 1)]
+        deflections = np.dot(xyz_v,self._transform)
+        deflections = [(deflections[0][0], deflections[0][1], deflections[0][2])] + self._deflection_offsets
+
         return deflections
 
 
@@ -502,8 +545,8 @@ if __name__ == "__main__":
     example_xyz = (0.0,0.0,0.0)
 
     scale = 1
-    HomoTransformer = HomogenousTransformer(scale, height, lower_points_real, upper_points_real)
-    if (False):
+    #HomoTransformer = HomogenousTransformer(scale, height, lower_points_real, upper_points_real)
+    if (True):
         print "LinTransformerMade"
         LinTransformer=LinearAlgebraTransformer(height ,lower_points_real ,upper_points_real)
         #LinTransformer=LinearAlgebraTransformer(height ,lower_points, upper_points)
@@ -540,6 +583,7 @@ if __name__ == "__main__":
         now=time.time()
         iterations=100000
         for i in range(1,iterations):
+            pass
             deflections = LinTransformer.transform(example_xyz)
         after=time.time()
         print "{0} iterations of transform took {1} seconds".format(iterations,after-now)
