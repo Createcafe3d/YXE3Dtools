@@ -118,9 +118,14 @@ class LinearAlgebraTransformer(Transformer):
         print left_cartesian
         print right_deflection
 
+        c_matrix = cartesian_normalized_matrix.tolist()
+        d_matrix = deflection_deskewed.tolist()
+        right_cartesian = [c_matrix[0], c_matrix[1], c_matrix[2], c_matrix[4]]
+        right_deflection= [d_matrix[0], d_matrix[1], d_matrix[2], d_matrix[4]]
+
         cartesian_m = np.concatenate((right_cartesian,[(1,)]*4), axis=1)
         deflection_m = np.concatenate((right_deflection,[(1,)]*4), axis=1)
-        cartesian_m_inv = pinv(cartesian_m)
+        cartesian_m_inv = inv(cartesian_m)
         transform_right = np.dot(cartesian_m_inv, deflection_m)
         print "RIGHT TRANSFORM MATRIX!"
         print transform_right
