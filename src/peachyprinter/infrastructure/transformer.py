@@ -1,6 +1,7 @@
 from numpy.linalg import inv
 from numpy.linalg import pinv
 import numpy as np
+import math
 
 import logging
 logger = logging.getLogger('peachy')
@@ -54,6 +55,8 @@ class LinearAlgebraTransformer(Transformer):
             '''
 
         self._upper_height = upper_height
+        lower_points = self._sort_points(lower_points)
+        upper_points = self._sort_points(upper_points)
         self._lower_points = lower_points
         self._upper_points = upper_points
         self._transform = self._create_transform(lower_points,upper_points,upper_height)
@@ -72,12 +75,19 @@ class LinearAlgebraTransformer(Transformer):
         num_points = 8.0
 
         # 1) Create C and D matricies
-        for (deflections, distances) in upper_points.items():
+        for (deflections, distances) in upper_points:
             deflection_matrix.append([deflections[0], deflections[1], upper_height])
             cartesian_matrix.append([distances[0], distances[1], upper_height])
-        for (deflections, distances) in lower_points.items():
+        for (deflections, distances) in lower_points:
             deflection_matrix.append([deflections[0], deflections[1], lower_height])
             cartesian_matrix.append([distances[0], distances[1], lower_height])
+
+        #print "INPUTS:"
+        #print "D"
+        #print np.matrix(deflection_matrix)
+        #print "C"
+        #print np.matrix(cartesian_matrix)
+
 
         # 2) Get centroids of outside matrix, for average and skew matrix
         cartesian_centroids = self._get_xyz_centroids(cartesian_matrix)
@@ -97,61 +107,37 @@ class LinearAlgebraTransformer(Transformer):
         deflection_skew = np.matrix([(0, 0, 0), (0, 0, 0), (zd_x_skew, zd_y_skew, 0)])
         deflection_deskewed = deflection_normalized_matrix - deflection_normalized_matrix*deflection_skew
 
-        #print "TESTING"
-        #print deflection_normalized_matrix
-        #print deflection_skew
-        #print deflection_deskewed
-        #print self._get_xyz_centroids(deflection_deskewed.tolist())
-
-        cartesian_smoothed = self._smooth_by_2(cartesian_normalized_matrix)
-        deflection_smoothed = self._smooth_by_2(deflection_deskewed)
-        print "PRESMOOTH"
-        print cartesian_normalized_matrix
-        print deflection_deskewed
-
-        (left_cartesian, left_deflection, right_cartesian, right_deflection) = self._seperate_lr(cartesian_normalized_matrix, deflection_deskewed)
-
-        print "RIGHTS:"
-        print right_cartesian
-        print right_deflection
-        print "LEFTS:"
-        print left_cartesian
-        print right_deflection
-
         c_matrix = cartesian_normalized_matrix.tolist()
         d_matrix = deflection_deskewed.tolist()
-        right_cartesian = [c_matrix[0], c_matrix[1], c_matrix[2], c_matrix[4]]
-        right_deflection= [d_matrix[0], d_matrix[1], d_matrix[2], d_matrix[4]]
 
-        cartesian_m = np.concatenate((right_cartesian,[(1,)]*4), axis=1)
-        deflection_m = np.concatenate((right_deflection,[(1,)]*4), axis=1)
-        cartesian_m_inv = inv(cartesian_m)
-        transform_right = np.dot(cartesian_m_inv, deflection_m)
-        print "RIGHT TRANSFORM MATRIX!"
-        print transform_right
+        #cartesian_m = np.concatenate((c_matrix,[(1,)]*8), axis=1)
+        #deflection_m = np.concatenate((d_matrix,[(1,)]*8), axis=1)
 
-        cartesian_m = np.concatenate((left_cartesian,[(1,)]*4), axis=1)
-        deflection_m = np.concatenate((left_deflection,[(1,)]*4), axis=1)
-        cartesian_m_inv = pinv(cartesian_m)
-        transform_left = np.dot(cartesian_m_inv, deflection_m)
-        print "LEFT TRANSFORM MATRIX!"
-        print transform_left
-
-        print "AVERAGED TRANSFORM MATRICIES:"
-        avg_transform = np.divide((transform_left + transform_right), 2.0)
-        print avg_transform
-    
-
-        #5) D = C.S
-        # 0,2 top 1,3 bottom, or overall 0,2,5,7
-        print cartesian_normalized_matrix[0]
-        print cartesian_normalized_matrix[2]
-        print cartesian_normalized_matrix[5]
-        print cartesian_normalized_matrix[7]
-        cartesian_m = np.concatenate((cartesian_normalized_matrix,[(1,)]*8), axis=1)
-        deflection_m = np.concatenate((deflection_deskewed,[(1,)]*8), axis=1)
+        # 5) Create transform_matrix
+        cartesian_m = np.matrix(c_matrix)
+        deflection_m = np.matrix(d_matrix)
         cartesian_m_inv = self._left_inverse(cartesian_m)
         transform_matrix = np.dot(cartesian_m_inv, deflection_m)
+
+        # 6) Manually derive the Z scaling 
+        zx = 0
+        zy = 0
+        deflection_m = deflection_m.tolist()
+        transform_matrix = transform_matrix.tolist()
+
+        for i in range(0,4):
+            zx += abs(deflection_m[i][0] - deflection_m[i+4][0])
+            zy += abs(deflection_m[i][1] - deflection_m[i+4][1])
+            print (zx/(i+1), zy/(i+1))
+
+        zx_scaled = zx / (upper_height*4.0)
+        zy_scaled = zy / (upper_height*4.0)
+        transform_matrix[2][0]=zx_scaled
+        transform_matrix[2][1]=zy_scaled
+
+        transform_matrix = np.matrix(transform_matrix)
+
+
 
         print "C"
         print cartesian_m
@@ -162,109 +148,12 @@ class LinearAlgebraTransformer(Transformer):
         print "TRANSFORM MATRIX!!!! SQUEEEEEE"
         print transform_matrix
 
+        self._transform = transform_matrix
+        self._cartesian_offsets = c_avg
+        self._deflection_offsets = d_avg
+        self._deflection_deskew = deflection_skew
+        return transform_matrix
 
-
-
-        upper_distances = [distance for (deflection, distance) in upper_points.items()]
-        upper_deflections = [deflection for (deflection, distance) in upper_points.items()]
-        lower_distances = [distance for (deflection, distance) in lower_points.items()]
-        lower_deflections = [deflection for (deflection, distance) in lower_points.items()]
-        lower_height = 0
-
-
-        #np.concatenate axis=1 is colum concatenate, axis=0 is concatenating a new row
-        #Bring it all together into 8x3 matricies
-        upper_3d_distances = np.concatenate((upper_distances, [(upper_height,)]*4), axis=1)
-        lower_3d_distances = np.concatenate((lower_distances, [(lower_height,)]*4), axis=1)
-        distances_3d = np.concatenate((upper_3d_distances, lower_3d_distances), axis=0)
-
-        #concatenate the height and constant to finish the output side of the array
-        upper_3d_deflections= np.concatenate((upper_deflections, [(upper_height,)]*4), axis=1)
-        lower_3d_deflections= np.concatenate((lower_deflections, [(lower_height,)]*4), axis=1)
-        deflections_3d = np.concatenate((upper_3d_deflections, lower_3d_deflections), axis=0)
-
-        #Try offsets before and after, so transforms are around 0
-        G_matrix = self._create_calibration_matricies(deflections_3d, distances_3d)
-        self._transform = G_matrix
-        return G_matrix
-
-    def _seperate_lr(self, cartesian_matrix, deflection_matrix):
-        ''' This creates the set of planes on the Z axis that give the greatest internal volume'''
-        left_cartesian=[]
-        right_cartesian=[]
-        left_deflection=[]
-        right_deflection=[]
-        d_matrix = deflection_matrix.tolist()
-        for i,row in enumerate(cartesian_matrix.tolist()):
-            print row
-            if (row[0]>0 and row[1]>0):
-                left_cartesian.append(row)
-                left_deflection.append(d_matrix[i])
-            elif (row[0]<0 and row[1]<0):
-                left_cartesian.append(row)
-                left_deflection.append(d_matrix[i])
-            else:
-                right_cartesian.append(row)
-                right_deflection.append(d_matrix[i])
-
-        left = [left_cartesian, left_deflection]
-        right = [right_cartesian, right_deflection]
-        return (left_cartesian, left_deflection ,right_cartesian, right_deflection)
-
-
-    def _smooth_by_2(self, input_matrix):
-        ''' Takes an 8x4 matrix and smoothes it to a 4x4 by taking pairs of points at opposite extremes on the top and bottom
-            returns a tupple of the two different possible arrays'''
-
-        top_matrix = []
-        bottom_matrix = []
-    
-        for row in input_matrix.tolist():
-            if row[2]>0:
-                top_matrix.append(row)
-            else:
-                bottom_matrix.append(row)
-
-        (top_left, top_right) = self._half_average(top_matrix)
-        (bottom_left, bottom_right) = self._half_average(bottom_matrix)
-        smoothed_matrix = np.matrix(top_left+top_right+bottom_left+bottom_right)
-        return smoothed_matrix
-
-    def _half_average(self,input_matrix):
-        ''' this takes a set of 4 (x,y,z) points in the same Z and creates a left and right set of two point averages'''
-
-        z = input_matrix[0][2]
-
-        xy_right=[0,0,z]
-        xy_right2=[0,0,z]
-        xy_left2=[0,0,z]
-        xy_left=[0,0,z]
-
-        for point in input_matrix:
-            if point[0] > 0 and point[1] > 0:
-                xy_right[0]+=point[0]/2.0
-                xy_right[1]+=point[1]/2.0
-                xy_left[0]+=point[0]/2.0
-                xy_left[1]+=point[1]/2.0
-            elif point[0] > 0 and point[1] < 0:
-                xy_right[0]+=point[0]/2.0
-                xy_right[1]+=point[1]/2.0
-                xy_left2[0]+=point[0]/2.0
-                xy_left2[1]+=point[1]/2.0
-            elif point[0] < 0 and point[1] > 0:
-                xy_left[0]+=point[0]/2.0
-                xy_left[1]+=point[1]/2.0
-                xy_right2[0]+=point[0]/2.0
-                xy_right2[1]+=point[1]/2.0
-            else:
-                xy_left2[0]+=point[0]/2.0
-                xy_left2[1]+=point[1]/2.0
-                xy_right2[0]+=point[0]/2.0
-                xy_right2[1]+=point[1]/2.0
-
-        left = [xy_left, xy_left2]
-        right = [xy_right, xy_right2]
-        return (left,right)
 
     def _get_xyz_centroids(self, input_matrix):
         '''Take set of points in [(dx,dy,z), (dx,dy,z), (...)]
@@ -320,59 +209,6 @@ class LinearAlgebraTransformer(Transformer):
         centroids=[x_max, x_min, y_max, y_min, z_max, z_min, avg]
         return centroids
 
-    def _create_calibration_matricies(self, deflection_matrix, cartesian_matrix):
-
-        #Get the centroids from the vertex points, and remove any offsets
-        deflection_centroids = self._get_xyz_centroids(deflection_matrix)
-        [xd_max, xd_min, yd_max, yd_min, zd_max, zd_min, d_avg] = deflection_centroids
-        cartesian_centroids = self._get_xyz_centroids(cartesian_matrix)
-        [x_max, x_min, y_max, y_min, z_max, z_min, avg] = cartesian_centroids
-
-        x = 0
-        y = 1
-        z = 2
-
-        # cheating a bit, the 0 offset is given in average of all centroids
-        d_bx = d_avg[x]
-        d_by = d_avg[y]
-        d_bz = d_avg[z]
-        bx = avg[x]
-        by = avg[y]
-        bz = avg[z]
-
-        self._deflection_offsets = np.matrix([(d_bx, d_by, d_bz)])
-        self._cartesian_offsets = np.matrix([(bx, by, bz)])
-
-        #Create the Vandermonde matrix with the centroids:
-        vandermonde_c_matrix = [(x_max[0], x_max[1], x_max[2], x_max[0]**2, x_max[1]**2, x_max[2]**2, 1),
-                               (x_min[0], x_min[1], x_min[2], x_min[0]**2, x_min[1]**2, x_min[2]**2, 1),
-                               (y_max[0], y_max[1], y_max[2], y_max[0]**2, y_max[1]**2, y_max[2]**2, 1),
-                               (y_min[0], y_min[1], y_min[2], y_min[0]**2, y_min[1]**2, y_min[2]**2, 1),
-                               (z_max[0], z_max[1], z_max[2], z_max[0]**2, z_max[1]**2, z_max[2]**2, 1),
-                               (z_min[0], z_min[1], z_min[2], z_min[0]**2, z_min[1]**2, z_min[2]**2, 1),
-                               (0, 0, 0, 0, 0, 0, 1)]
-
-        vandermonde_d_matrix = [(xd_max[0], xd_max[1], xd_max[2], xd_max[0]**2, xd_max[1]**2, xd_max[2]**2, 1),
-                               (xd_min[0], xd_min[1], xd_min[2], xd_min[0]**2, xd_min[1]**2, xd_min[2]**2, 1),
-                               (yd_max[0], yd_max[1], yd_max[2], yd_max[0]**2, yd_max[1]**2, yd_max[2]**2, 1),
-                               (yd_min[0], yd_min[1], yd_min[2], yd_min[0]**2, yd_min[1]**2, yd_min[2]**2, 1),
-                               (zd_max[0], zd_max[1], zd_max[2], zd_max[0]**2, zd_max[1]**2, zd_max[2]**2, 1),
-                               (zd_min[0], zd_min[1], zd_min[2], zd_min[0]**2, zd_min[1]**2, zd_min[2]**2, 1),
-                               (0, 0, 0, 0, 0, 0, 1)]
-
-        c_matrix_inv = self._left_inverse(vandermonde_c_matrix)
-        vandermonde_t_matrix = np.dot(c_matrix_inv, vandermonde_d_matrix)
-
-        #print "Vander C Matrix:"
-        #print np.matrix(vandermonde_c_matrix)
-        #print "Vander D Matrix:"
-        #print np.matrix(vandermonde_d_matrix)
-        print "VANDERMONDE MATRIX:"
-        print vandermonde_t_matrix
-
-        return vandermonde_t_matrix
-
-
     def _left_inverse(self,matrix):
         ''' leftInverse(A) = inverse(A_t*A)*A_t
             This should take the moore-penrose inverse'''
@@ -383,12 +219,22 @@ class LinearAlgebraTransformer(Transformer):
         left_inverse = np.dot(inverse_helper,transposed_matrix)
         return left_inverse
 
+    def _sort_points(self, points):
+        distances = [distance for (deflection, distance) in points.items()]
+        normals = [(int(x / abs(x)), int(y / abs(y))) for (x, y) in distances]
+        return [
+            points.items()[normals.index(( 1,  1))],
+            points.items()[normals.index(( 1, -1))],
+            points.items()[normals.index((-1, -1))],
+            points.items()[normals.index((-1,  1))],
+            ]
+
     def transform(self,xyz_cartesian):
         '''THE transform function, provide (x,y,z) and you'll get (xd, yd, z)'''
         xyz_point = (np.matrix([xyz_cartesian]) - self._cartesian_offsets).tolist()
-        xyz_v=[(xyz_point[0][0], xyz_point[0][1], xyz_point[0][2], xyz_point[0][0]**2, xyz_point[0][1]**2, xyz_point[0][2]**2, 1)]
-        deflections = np.dot(xyz_v,self._transform)
-        deflections = [(deflections[0][0], deflections[0][1], deflections[0][2])] + self._deflection_offsets
+        deflections_s = np.dot(xyz_point,self._transform)
+        #deflections = [(deflections[0][0], deflections[0][1], deflections[0][2])] + self._deflection_offsets
+        deflections = deflections_s + np.dot(deflections_s, self._deflection_deskew) + self._deflection_offsets
 
         return deflections
 
