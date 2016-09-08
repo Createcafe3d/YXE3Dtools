@@ -105,6 +105,22 @@ class LinearAlgebraTransformer(Transformer):
 
         cartesian_smoothed = self._smooth_by_2(cartesian_normalized_matrix)
         deflection_smoothed = self._smooth_by_2(deflection_deskewed)
+        print "PRESMOOTH"
+        print cartesian_normalized_matrix
+        print deflection_deskewed
+
+        print "POSTSMOOTH"
+        print cartesian_smoothed
+        print deflection_smoothed
+
+
+        cartesian_m = np.concatenate((cartesian_smoothed,[(1,)]*8), axis=1)
+        deflection_m = np.concatenate((deflection_smoothed,[(1,)]*8), axis=1)
+        cartesian_m_inv = self._left_inverse(cartesian_m)
+        transform_matrix = np.dot(cartesian_m_inv, deflection_m)
+        print "TRANSFORM MATRIX?"
+        print transform_matrix
+    
 
         #5) D = C.S
         cartesian_m = np.concatenate((cartesian_normalized_matrix,[(1,)]*8), axis=1)
@@ -163,7 +179,6 @@ class LinearAlgebraTransformer(Transformer):
         (top_left, top_right) = self._half_average(top_matrix)
         (bottom_left, bottom_right) = self._half_average(bottom_matrix)
         smoothed_matrix = np.matrix(top_left+top_right+bottom_left+bottom_right)
-        print smoothed_matrix
         return smoothed_matrix
 
     def _half_average(self,input_matrix):
