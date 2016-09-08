@@ -109,20 +109,40 @@ class LinearAlgebraTransformer(Transformer):
         print cartesian_normalized_matrix
         print deflection_deskewed
 
-        print "POSTSMOOTH"
-        print cartesian_smoothed
-        print deflection_smoothed
+        (left_cartesian, left_deflection, right_cartesian, right_deflection) = self._seperate_lr(cartesian_normalized_matrix, deflection_deskewed)
 
+        print "RIGHTS:"
+        print right_cartesian
+        print right_deflection
+        print "LEFTS:"
+        print left_cartesian
+        print right_deflection
 
-        cartesian_m = np.concatenate((cartesian_smoothed,[(1,)]*8), axis=1)
-        deflection_m = np.concatenate((deflection_smoothed,[(1,)]*8), axis=1)
-        cartesian_m_inv = self._left_inverse(cartesian_m)
-        transform_matrix = np.dot(cartesian_m_inv, deflection_m)
-        print "TRANSFORM MATRIX?"
-        print transform_matrix
+        cartesian_m = np.concatenate((right_cartesian,[(1,)]*4), axis=1)
+        deflection_m = np.concatenate((right_deflection,[(1,)]*4), axis=1)
+        cartesian_m_inv = pinv(cartesian_m)
+        transform_right = np.dot(cartesian_m_inv, deflection_m)
+        print "RIGHT TRANSFORM MATRIX!"
+        print transform_right
+
+        cartesian_m = np.concatenate((left_cartesian,[(1,)]*4), axis=1)
+        deflection_m = np.concatenate((left_deflection,[(1,)]*4), axis=1)
+        cartesian_m_inv = pinv(cartesian_m)
+        transform_left = np.dot(cartesian_m_inv, deflection_m)
+        print "LEFT TRANSFORM MATRIX!"
+        print transform_left
+
+        print "AVERAGED TRANSFORM MATRICIES:"
+        avg_transform = np.divide((transform_left + transform_right), 2.0)
+        print avg_transform
     
 
         #5) D = C.S
+        # 0,2 top 1,3 bottom, or overall 0,2,5,7
+        print cartesian_normalized_matrix[0]
+        print cartesian_normalized_matrix[2]
+        print cartesian_normalized_matrix[5]
+        print cartesian_normalized_matrix[7]
         cartesian_m = np.concatenate((cartesian_normalized_matrix,[(1,)]*8), axis=1)
         deflection_m = np.concatenate((deflection_deskewed,[(1,)]*8), axis=1)
         cartesian_m_inv = self._left_inverse(cartesian_m)
@@ -162,6 +182,30 @@ class LinearAlgebraTransformer(Transformer):
         G_matrix = self._create_calibration_matricies(deflections_3d, distances_3d)
         self._transform = G_matrix
         return G_matrix
+
+    def _seperate_lr(self, cartesian_matrix, deflection_matrix):
+        ''' This creates the set of planes on the Z axis that give the greatest internal volume'''
+        left_cartesian=[]
+        right_cartesian=[]
+        left_deflection=[]
+        right_deflection=[]
+        d_matrix = deflection_matrix.tolist()
+        for i,row in enumerate(cartesian_matrix.tolist()):
+            print row
+            if (row[0]>0 and row[1]>0):
+                left_cartesian.append(row)
+                left_deflection.append(d_matrix[i])
+            elif (row[0]<0 and row[1]<0):
+                left_cartesian.append(row)
+                left_deflection.append(d_matrix[i])
+            else:
+                right_cartesian.append(row)
+                right_deflection.append(d_matrix[i])
+
+        left = [left_cartesian, left_deflection]
+        right = [right_cartesian, right_deflection]
+        return (left_cartesian, left_deflection ,right_cartesian, right_deflection)
+
 
     def _smooth_by_2(self, input_matrix):
         ''' Takes an 8x4 matrix and smoothes it to a 4x4 by taking pairs of points at opposite extremes on the top and bottom
