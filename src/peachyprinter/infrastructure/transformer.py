@@ -103,6 +103,9 @@ class LinearAlgebraTransformer(Transformer):
         #print deflection_deskewed
         #print self._get_xyz_centroids(deflection_deskewed.tolist())
 
+        cartesian_smoothed = self._smooth_by_2(cartesian_normalized_matrix)
+        deflection_smoothed = self._smooth_by_2(deflection_deskewed)
+
         #5) D = C.S
         cartesian_m = np.concatenate((cartesian_normalized_matrix,[(1,)]*8), axis=1)
         deflection_m = np.concatenate((deflection_deskewed,[(1,)]*8), axis=1)
@@ -143,6 +146,61 @@ class LinearAlgebraTransformer(Transformer):
         G_matrix = self._create_calibration_matricies(deflections_3d, distances_3d)
         self._transform = G_matrix
         return G_matrix
+
+    def _smooth_by_2(self, input_matrix):
+        ''' Takes an 8x4 matrix and smoothes it to a 4x4 by taking pairs of points at opposite extremes on the top and bottom
+            returns a tupple of the two different possible arrays'''
+
+        top_matrix = []
+        bottom_matrix = []
+    
+        for row in input_matrix.tolist():
+            if row[2]>0:
+                top_matrix.append(row)
+            else:
+                bottom_matrix.append(row)
+
+        (top_left, top_right) = self._half_average(top_matrix)
+        (bottom_left, bottom_right) = self._half_average(bottom_matrix)
+        smoothed_matrix = np.matrix(top_left+top_right+bottom_left+bottom_right)
+        print smoothed_matrix
+        return smoothed_matrix
+
+    def _half_average(self,input_matrix):
+        ''' this takes a set of 4 (x,y,z) points in the same Z and creates a left and right set of two point averages'''
+
+        z = input_matrix[0][2]
+
+        xy_right=[0,0,z]
+        xy_right2=[0,0,z]
+        xy_left2=[0,0,z]
+        xy_left=[0,0,z]
+
+        for point in input_matrix:
+            if point[0] > 0 and point[1] > 0:
+                xy_right[0]+=point[0]/2.0
+                xy_right[1]+=point[1]/2.0
+                xy_left[0]+=point[0]/2.0
+                xy_left[1]+=point[1]/2.0
+            elif point[0] > 0 and point[1] < 0:
+                xy_right[0]+=point[0]/2.0
+                xy_right[1]+=point[1]/2.0
+                xy_left2[0]+=point[0]/2.0
+                xy_left2[1]+=point[1]/2.0
+            elif point[0] < 0 and point[1] > 0:
+                xy_left[0]+=point[0]/2.0
+                xy_left[1]+=point[1]/2.0
+                xy_right2[0]+=point[0]/2.0
+                xy_right2[1]+=point[1]/2.0
+            else:
+                xy_left2[0]+=point[0]/2.0
+                xy_left2[1]+=point[1]/2.0
+                xy_right2[0]+=point[0]/2.0
+                xy_right2[1]+=point[1]/2.0
+
+        left = [xy_left, xy_left2]
+        right = [xy_right, xy_right2]
+        return (left,right)
 
     def _get_xyz_centroids(self, input_matrix):
         '''Take set of points in [(dx,dy,z), (dx,dy,z), (...)]
