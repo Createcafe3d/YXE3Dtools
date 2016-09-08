@@ -64,61 +64,59 @@ class LinearAlgebraTransformer(Transformer):
         deflection_averages=[0,0,0]
         deflection_matrix = []
         deflection_normalized_matrix = []
+        deflection_skew_matrix = []
         cartesian_averages=[0,0,0]
         cartesian_matrix = []
         cartesian_normalized_matrix = []
         lower_height = 0.0
         num_points = 8.0
 
+        # 1) Create C and D matricies
         for (deflections, distances) in upper_points.items():
-            deflection_averages[0] += deflections[0]/num_points
-            deflection_averages[1] += deflections[1]/num_points
-            deflection_averages[2] += upper_height/num_points
             deflection_matrix.append([deflections[0], deflections[1], upper_height])
-            cartesian_averages[0] += distances[0]/num_points
-            cartesian_averages[1] += distances[1]/num_points
-            cartesian_averages[2] += upper_height/num_points
             cartesian_matrix.append([distances[0], distances[1], upper_height])
-
         for (deflections, distances) in lower_points.items():
-            deflection_averages[0] += deflections[0]/num_points
-            deflection_averages[1] += deflections[1]/num_points
-            deflection_averages[2] += lower_height/num_points
             deflection_matrix.append([deflections[0], deflections[1], lower_height])
-            cartesian_averages[0] += distances[0]/num_points
-            cartesian_averages[1] += distances[1]/num_points
-            cartesian_averages[2] += lower_height/num_points
             cartesian_matrix.append([distances[0], distances[1], lower_height])
 
-        deflection_offset_matrix = np.matrix([(deflection_averages[0], deflection_averages[1], deflection_averages[2])]*8)
-        cartesian_offset_matrix = np.matrix([(cartesian_averages[0], cartesian_averages[1], cartesian_averages[2])]*8)
+        # 2) Get centroids of outside matrix, for average and skew matrix
+        cartesian_centroids = self._get_xyz_centroids(cartesian_matrix)
+        deflection_centroids = self._get_xyz_centroids(deflection_matrix)
+        [xc_max, xc_min, yc_max, yc_min, zc_max, zc_min, c_avg] = cartesian_centroids
+        [xd_max, xd_min, yd_max, yd_min, zd_max, zd_min, d_avg] = deflection_centroids
 
+        # 3) Subtract averages
+        deflection_offset_matrix = np.matrix([d_avg]*8)
+        cartesian_offset_matrix = np.matrix([c_avg]*8)
         deflection_normalized_matrix = deflection_matrix - deflection_offset_matrix
         cartesian_normalized_matrix = cartesian_matrix - cartesian_offset_matrix
 
-        deflections_squared = np.square(deflection_normalized_matrix)
-        cartesians_squared = np.square(cartesian_normalized_matrix)
+        # 4) Create descewed Skew Matrix:
+        zd_x_skew = (zd_max[0] - zd_min[0])/(zd_max[2] - zd_min[2])
+        zd_y_skew = (zd_max[1] - zd_min[1])/(zd_max[2] - zd_min[2])
+        deflection_skew = np.matrix([(0, 0, 0), (0, 0, 0), (zd_x_skew, zd_y_skew, 0)])
+        deflection_deskewed = deflection_normalized_matrix - deflection_normalized_matrix*deflection_skew
 
-        cartesian_vandermonde = np.concatenate((cartesian_normalized_matrix, cartesians_squared), axis=1)
-        cartesian_vandermonde = np.concatenate((cartesian_vandermonde, [(1,)]*8), axis=1)
-        deflection_vandermonde = np.concatenate((deflection_normalized_matrix, deflections_squared), axis=1)
-        deflection_vandermonde = np.concatenate((deflection_vandermonde, [(1,)]*8), axis=1)
+        #print "TESTING"
+        #print deflection_normalized_matrix
+        #print deflection_skew
+        #print deflection_deskewed
+        #print self._get_xyz_centroids(deflection_deskewed.tolist())
 
-        print cartesian_vandermonde
-        cartesian_vandermonde = np.delete(cartesian_vandermonde,7,0)
-        #cartesian_vandermonde = np.delete(cartesian_vandermonde,3,0)
-        deflection_vandermonde = np.delete(deflection_vandermonde,7,0)
-        #deflection_vandermonde = np.delete(deflection_vandermonde,3,0)
-        print "7x7 CARTESIAN????"
-        print cartesian_vandermonde
+        #5) D = C.S
+        cartesian_m = np.concatenate((cartesian_normalized_matrix,[(1,)]*8), axis=1)
+        deflection_m = np.concatenate((deflection_deskewed,[(1,)]*8), axis=1)
+        cartesian_m_inv = self._left_inverse(cartesian_m)
+        transform_matrix = np.dot(cartesian_m_inv, deflection_m)
 
-        cartesian_vandermonde_inv = self._left_inverse(cartesian_vandermonde)
-        #cartesian_vandermonde_inv = inv(cartesian_vandermonde)
-        transform_matrix = np.dot(cartesian_vandermonde_inv, deflection_vandermonde)
-
+        print "C"
+        print cartesian_m
+        print "C-1 left"
+        print cartesian_m_inv
+        print "D"
+        print deflection_m
         print "TRANSFORM MATRIX!!!! SQUEEEEEE"
         print transform_matrix
-
 
 
 
