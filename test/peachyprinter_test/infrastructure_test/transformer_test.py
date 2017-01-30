@@ -107,7 +107,10 @@ class HomogenousTransformerTests(unittest.TestCase):
         expected_points = [((x + 1.0) / 2.0, (y + 1.0) / 2.0) for (x, y, z) in test_points]
         actual_points = [transformer.transform(point) for point in test_points]
 
-        self.assertEquals(expected_points, actual_points)
+        #self.assertEquals(expected_points, actual_points)
+        for idx in range(0,len(expected_points)):
+            self.assertAlmostEquals(expected_points[idx][0], actual_points[idx][0])
+            self.assertAlmostEquals(expected_points[idx][1], actual_points[idx][1])
 
     # def test_zero_should_not_change_regardless_of_height(self):
     #     height = 1.0
@@ -161,7 +164,10 @@ class HomogenousTransformerTests(unittest.TestCase):
 
         actual_points = [transformer.transform(point) for point in test_points]
 
-        self.assertEquals(expected_points, actual_points)
+        #self.assertEquals(expected_points, actual_points)
+        for idx in range(0,len(expected_points)):
+            self.assertAlmostEquals(expected_points[idx][0], actual_points[idx][0])
+            self.assertAlmostEquals(expected_points[idx][1], actual_points[idx][1])
 
     def test_given_a_basic_mapping_yields_expected_results_with_scale_change(self):
         height = 1.0
@@ -187,8 +193,13 @@ class HomogenousTransformerTests(unittest.TestCase):
         transformer.set_scale(1.0)
         actual_points_post = [transformer.transform(point) for point in test_points]
 
-        self.assertEquals(expected_points_pre, actual_points_pre)
-        self.assertEquals(expected_points_post, actual_points_post)
+        for idx in range(0,len(expected_points_pre)):
+            self.assertAlmostEquals(expected_points_pre[idx][0], actual_points_pre[idx][0])
+            self.assertAlmostEquals(expected_points_pre[idx][1], actual_points_pre[idx][1])
+            self.assertAlmostEquals(expected_points_post[idx][0], actual_points_post[idx][0])
+            self.assertAlmostEquals(expected_points_post[idx][1], actual_points_post[idx][1])
+        #self.assertEquals(expected_points_pre, actual_points_pre)
+        #self.assertEquals(expected_points_post, actual_points_post)
 
     def test_given_a_basic_mapping_yields_expected_results_2(self):
         height = 2.0

@@ -453,10 +453,10 @@ class HomogenousTransformer(Transformer):
             return (x2, y2)
         else:
             logger.warning("Bounds of printer exceeded: %s,%s" % (x, y))
-            adjusted_x = min(1.0, max(0.0, x1))
-            adjusted_y = min(1.0, max(0.0, y1))
+            adjusted_x = min(1.0, max(0.0, x2))
+            adjusted_y = min(1.0, max(0.0, y2))
             #re-add offsets
-            return(adjusted_translated_x, adjusted_translated_y)
+            return(adjusted_x, adjusted_y)
 
     def set_scale(self, new_scale):
         self._scale = new_scale
