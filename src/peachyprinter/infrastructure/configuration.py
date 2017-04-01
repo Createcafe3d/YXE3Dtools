@@ -634,9 +634,9 @@ class CalibrationConfiguration(ConfigurationBase):
         self._height = self.get(source, u'height', 0.0)
         self._lower_points = [((l[0][0], l[0][1]), (l[1][0], l[1][1])) for l in source.get(u'lower_points', [[[0.0, 1.0], [-40.0, 40.0]], [[1.0, 0.0], [40.0, -40.0]], [[0.0, 0.0], [-40.0, -40.0]], [[1.0, 1.0], [40.0, 40.0]]])]
         self._upper_points = [((u[0][0], u[0][1]), (u[1][0], u[1][1])) for u in source.get(u'upper_points', [[[0.0, 1.0], [-30.0, 30.0]], [[1.0, 0.0], [30.0, -30.0]], [[0.0, 0.0], [-30.0, -30.0]], [[1.0, 1.0], [30.0, 30.0]]])]
-        self._print_area_x = self.get(source, u'print_area_x', 80.0)
-        self._print_area_y = self.get(source, u'print_area_y', 80.0)
-        self._print_area_z = self.get(source, u'print_area_z', 80.0)
+        self._print_area_x = self.get(source, u'print_area_x', 40.0)
+        self._print_area_y = self.get(source, u'print_area_y', 40.0)
+        self._print_area_z = self.get(source, u'print_area_z', 50.0)
         self._flip_x_axis = self.get(source, u'flip_x_axis', False)
         self._flip_y_axis = self.get(source, u'flip_y_axis', False)
         self._swap_axis = self.get(source, u'swap_axis', False)
